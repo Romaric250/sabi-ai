@@ -39,27 +39,49 @@ export function SimpleCandyCrushRoadmap({ stages, onStageClick }: SimpleCandyCru
             height: 4 * spacing + stageSize
           }}
         >
-          {/* Path from stage 1 to 2 */}
-          <motion.path
-            d={`M ${2 * spacing + stageSize / 2} ${0 * spacing + stageSize / 2} Q ${1.5 * spacing} ${0.5 * spacing} ${1 * spacing + stageSize / 2} ${1 * spacing + stageSize / 2}`}
-            stroke="#8b5cf6"
-            strokeWidth="4"
-            fill="none"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-          />
-          {/* Path from stage 1 to 3 */}
-          <motion.path
-            d={`M ${2 * spacing + stageSize / 2} ${0 * spacing + stageSize / 2} Q ${2.5 * spacing} ${0.5 * spacing} ${3 * spacing + stageSize / 2} ${1 * spacing + stageSize / 2}`}
-            stroke="#8b5cf6"
-            strokeWidth="4"
-            fill="none"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1, delay: 0.7 }}
-          />
-          {/* More paths... */}
+          {/* Dynamic pathway connections */}
+          {stages.map((stage, index) => {
+            if (index === stages.length - 1) return null; // No path from last stage
+
+            const nextStage = stages[index + 1];
+            const fromX = stage.position.x * spacing + stageSize / 2;
+            const fromY = stage.position.y * spacing + stageSize / 2;
+            const toX = nextStage.position.x * spacing + stageSize / 2;
+            const toY = nextStage.position.y * spacing + stageSize / 2;
+
+            // Create curved path
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+            const controlX = midX + (Math.random() - 0.5) * 100;
+            const controlY = midY - 50;
+
+            return (
+              <motion.path
+                key={`path-${stage.id}-${nextStage.id}`}
+                d={`M ${fromX} ${fromY} Q ${controlX} ${controlY} ${toX} ${toY}`}
+                stroke="url(#pathGradient)"
+                strokeWidth="6"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray="8,4"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{
+                  pathLength: stage.isCompleted ? 1 : stage.isUnlocked ? 0.5 : 0,
+                  opacity: stage.isUnlocked ? 0.8 : 0.3
+                }}
+                transition={{ duration: 1.5, delay: index * 0.3 }}
+              />
+            );
+          })}
+
+          {/* Gradient definition for paths */}
+          <defs>
+            <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#06B6D4" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#10B981" stopOpacity="0.8" />
+            </linearGradient>
+          </defs>
         </svg>
 
         {/* Stage nodes */}

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play, Book, FileText, CheckCircle, ArrowRight, MessageCircle } from 'lucide-react';
+import { StudyMaterialCard } from './StudyMaterialCard';
+import { StageChatInterface } from './StageChatInterface';
 
 interface RoadmapStage {
   id: string;
@@ -34,6 +36,7 @@ export function StageModal({ stage, onClose, onComplete }: StageModalProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [quizResults, setQuizResults] = useState<boolean[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   const handleQuizAnswer = (answerIndex: number) => {
     setSelectedAnswer(answerIndex);
@@ -161,21 +164,7 @@ export function StageModal({ stage, onClose, onComplete }: StageModalProps) {
               >
                 <h3 className="text-xl font-bold text-white mb-4">Study Materials</h3>
                 {stage.materials.map((material, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-4 bg-slate-700/30 rounded-xl border border-slate-600/30 hover:border-blue-500/30 transition-colors group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                        <FileText className="w-4 h-4 text-blue-400" />
-                      </div>
-                      <span className="text-white font-medium">{material}</span>
-                      <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-blue-400 transition-colors" />
-                    </div>
-                  </motion.div>
+                  <StudyMaterialCard key={index} material={material} index={index} />
                 ))}
               </motion.div>
             )}
@@ -287,18 +276,28 @@ export function StageModal({ stage, onClose, onComplete }: StageModalProps) {
         {/* Footer */}
         <div className="p-6 border-t border-slate-700/50 flex items-center justify-between">
           <button
-            onClick={() => {/* Open AI chat for this stage */}}
+            onClick={() => setShowChat(true)}
             className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-300 rounded-xl hover:bg-purple-500/30 transition-colors"
           >
             <MessageCircle size={16} />
             Ask AI Tutor
           </button>
-          
+
           <div className="text-sm text-gray-400">
             Stage {stage.id} • {stage.lessons.length} lessons • {stage.quiz.length} questions
           </div>
         </div>
       </motion.div>
+
+      {/* Stage Chat Interface */}
+      {showChat && (
+        <StageChatInterface
+          onClose={() => setShowChat(false)}
+          context={`Learning ${stage.title}`}
+          stageId={stage.id}
+          stageTitle={stage.title}
+        />
+      )}
     </motion.div>
   );
 }
