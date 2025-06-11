@@ -28,6 +28,11 @@ export function StageSheet({ stage, isOpen, onClose, onComplete }: StageSheetPro
   const [quizResults, setQuizResults] = useState<boolean[]>([]);
   const [showResults, setShowResults] = useState(false);
 
+  // Resize state
+  const [sheetWidth, setSheetWidth] = useState(800);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<HTMLDivElement>(null);
+
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -142,18 +147,80 @@ export function StageSheet({ stage, isOpen, onClose, onComplete }: StageSheetPro
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
+  // Resize functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const newWidth = window.innerWidth - e.clientX;
+      const minWidth = 400;
+      const maxWidth = window.innerWidth * 0.9;
+
+      setSheetWidth(Math.max(minWidth, Math.min(maxWidth, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    if (isResizing) {
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      if (!isResizing) {
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+  }, [isResizing]);
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="right" className="w-full sm:w-[400px] lg:w-[500px] bg-white border-l border-gray-200 p-0 overflow-hidden">
-          <div className="h-full flex flex-col">
+        <SheetContent
+          side="right"
+          className="bg-white border-l border-gray-200 p-0 overflow-hidden"
+          style={{ width: `${sheetWidth}px` }}
+        >
+          {/* Resize Handle */}
+          <div
+            ref={resizeRef}
+            onMouseDown={handleMouseDown}
+            className={`absolute left-0 top-0 w-2 h-full hover:bg-blue-500 cursor-col-resize z-10 transition-all duration-200 ${
+              isResizing ? 'bg-blue-500 w-3' : 'bg-gray-300'
+            }`}
+            style={{ left: '-3px' }}
+            title="Drag to resize"
+          >
+            {/* Visual indicator dots */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1">
+              <div className="w-0.5 h-0.5 bg-white rounded-full opacity-70"></div>
+              <div className="w-0.5 h-0.5 bg-white rounded-full opacity-70"></div>
+              <div className="w-0.5 h-0.5 bg-white rounded-full opacity-70"></div>
+            </div>
+          </div>
+
+          <div className="h-full flex flex-col relative">
             {/* Header */}
             <div className={`p-6 bg-gradient-to-r ${stage.color} text-white relative`}>
               <SheetHeader>
@@ -319,7 +386,7 @@ export function StageSheet({ stage, isOpen, onClose, onComplete }: StageSheetPro
                       <textarea
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={handleKeyDown}
                         placeholder={`Ask about ${stage.title}...`}
                         className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         rows={2}
