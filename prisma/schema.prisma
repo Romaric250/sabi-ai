@@ -53,12 +53,18 @@ model Roadmap {
 }
 
 model UserRoadmap {
-  id         String   @id @default(cuid())
-  userId     String
-  roadmapId  String
-  progress   Json?    // Store user's progress through stages
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(cuid())
+  userId          String
+  roadmapId       String
+  progress        Json?    // Store detailed progress data
+  currentStage    Int      @default(1)
+  completedStages Int[]    @default([])
+  quizScores      Json?    // Store quiz scores for each stage
+  chatHistory     Json?    // Store chat interactions
+  isCompleted     Boolean  @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -19,7 +19,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { data, isPending } = useTempSession();
   const session = data?.user;
-  const prompt = searchParams.get('prompt') || 'Trigonometry';
+  const prompt = searchParams.get('prompt');
+  const roadmapId = searchParams.get('roadmapId');
 
   const [isGenerating, setIsGenerating] = useState(true);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -35,26 +36,83 @@ export default function DashboardPage() {
     }
   }, [session, isPending, router]);
 
-  // Show loading while checking authentication
-  if (isPending) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
-          />
-          <p className="text-white text-lg">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
+  // Generate roadmap effect
+  useEffect(() => {
+    if (!session) return; // Don't generate if not authenticated
 
-  // Don't render anything if not authenticated (will redirect)
-  if (!session) {
-    return null;
-  }
+    // Real AI roadmap generation
+    const generateRoadmap = async () => {
+      setIsGenerating(true);
+      setGenerationProgress(0);
+
+      try {
+        // Simulate progress during AI generation
+        const progressInterval = setInterval(() => {
+          setGenerationProgress(prev => {
+            if (prev >= 90) return prev;
+            return prev + Math.random() * 10;
+          });
+        }, 200);
+
+        console.log('Generating roadmap for:', prompt);
+
+        // Call the real AI API
+        const response = await fetch('/api/generate-roadmap', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('AI Response:', data);
+
+        clearInterval(progressInterval);
+        setGenerationProgress(100);
+
+        if (data.success && data.roadmap) {
+          // Handle both old array format and new object format
+          const stages = Array.isArray(data.roadmap) ? data.roadmap : data.roadmap.stages;
+          const finalQuizData = data.roadmap.finalQuiz;
+
+          // Transform AI roadmap to match our interface
+          const transformedRoadmap = stages.map((stage: any, index: number) => ({
+            ...stage,
+            isUnlocked: index === 0, // Only first stage is unlocked
+            isCompleted: false,
+            icon: [Zap, Brain, Sparkles, Star, Trophy, Brain][index] || Brain
+          }));
+
+          setTimeout(() => {
+            setRoadmapStages(transformedRoadmap);
+            if (finalQuizData) {
+              setFinalQuiz(finalQuizData);
+            }
+            setIsGenerating(false);
+          }, 1000);
+        } else {
+          throw new Error('Failed to generate roadmap');
+        }
+
+      } catch (error) {
+        console.error('Error generating roadmap:', error);
+
+        // Fallback to mock data on error
+        setTimeout(() => {
+          setRoadmapStages(mockTrigonometryRoadmap);
+          setFinalQuiz(mockFinalQuiz);
+          setIsGenerating(false);
+        }, 1000);
+      }
+    };
+
+    generateRoadmap();
+  }, [prompt, session]);
 
 
 
@@ -226,80 +284,7 @@ export default function DashboardPage() {
     }
   ];
 
-  useEffect(() => {
-    // Real AI roadmap generation
-    const generateRoadmap = async () => {
-      setIsGenerating(true);
-      setGenerationProgress(0);
 
-      try {
-        // Simulate progress during AI generation
-        const progressInterval = setInterval(() => {
-          setGenerationProgress(prev => {
-            if (prev >= 90) return prev;
-            return prev + Math.random() * 10;
-          });
-        }, 200);
-
-        console.log('Generating roadmap for:', prompt);
-
-        // Call the real AI API
-        const response = await fetch('/api/generate-roadmap', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ prompt }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log('AI Response:', data);
-
-        clearInterval(progressInterval);
-        setGenerationProgress(100);
-
-        if (data.success && data.roadmap) {
-          // Handle both old array format and new object format
-          const stages = Array.isArray(data.roadmap) ? data.roadmap : data.roadmap.stages;
-          const finalQuizData = data.roadmap.finalQuiz;
-
-          // Transform AI roadmap to match our interface
-          const transformedRoadmap = stages.map((stage: any, index: number) => ({
-            ...stage,
-            isUnlocked: index === 0, // Only first stage is unlocked
-            isCompleted: false,
-            icon: [Zap, Brain, Sparkles, Star, Trophy, Brain][index] || Brain
-          }));
-
-          setTimeout(() => {
-            setRoadmapStages(transformedRoadmap);
-            if (finalQuizData) {
-              setFinalQuiz(finalQuizData);
-            }
-            setIsGenerating(false);
-          }, 1000);
-        } else {
-          throw new Error('Failed to generate roadmap');
-        }
-
-      } catch (error) {
-        console.error('Error generating roadmap:', error);
-
-        // Fallback to mock data on error
-        setTimeout(() => {
-          setRoadmapStages(mockTrigonometryRoadmap);
-          setFinalQuiz(mockFinalQuiz);
-          setIsGenerating(false);
-        }, 1000);
-      }
-    };
-
-    generateRoadmap();
-  }, [prompt]);
 
   const handleStageClick = (stage: RoadmapStage) => {
     if (stage.isUnlocked) {
@@ -343,6 +328,27 @@ export default function DashboardPage() {
       alert(`You scored ${score}%. Review the materials and try again!`);
     }
   };
+
+  // Show loading while checking authentication
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-white text-lg">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!session) {
+    return null;
+  }
 
   if (isGenerating) {
     return (

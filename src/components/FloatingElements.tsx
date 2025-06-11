@@ -17,8 +17,10 @@ const floatingElements = [
 
 export function FloatingElements() {
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== 'undefined') {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
 
@@ -30,6 +32,10 @@ export function FloatingElements() {
       return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">

@@ -1,6 +1,7 @@
-// Temporary in-memory authentication for testing without database
+// Hybrid authentication system - tries database first, falls back to memory
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { prisma } from './prisma';
 
 interface User {
   id: string;
@@ -26,37 +27,75 @@ const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'temp-secret-key';
 export class TempAuth {
   static async signUp(email: string, password: string, name?: string) {
     try {
-      // Check if user already exists
-      const existingUser = users.find(u => u.email === email);
-      if (existingUser) {
-        throw new Error('User already exists');
+      // Try database first
+      try {
+        // Check if user already exists in database
+        const existingDbUser = await prisma.user.findUnique({
+          where: { email }
+        });
+
+        if (existingDbUser) {
+          throw new Error('User already exists');
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Create user in database
+        const dbUser = await prisma.user.create({
+          data: {
+            email,
+            name,
+            password: hashedPassword,
+          }
+        });
+
+        // Create session
+        const session = await this.createSession(dbUser.id);
+
+        return {
+          user: {
+            id: dbUser.id,
+            email: dbUser.email,
+            name: dbUser.name,
+          },
+          session,
+        };
+      } catch (dbError) {
+        console.log('Database unavailable, using memory storage:', dbError);
+
+        // Fallback to memory storage
+        const existingUser = users.find(u => u.email === email);
+        if (existingUser) {
+          throw new Error('User already exists');
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Create user in memory
+        const user: User = {
+          id: Math.random().toString(36).substring(2, 15),
+          email,
+          name,
+          password: hashedPassword,
+          createdAt: new Date(),
+        };
+
+        users.push(user);
+
+        // Create session
+        const session = await this.createSession(user.id);
+
+        return {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          },
+          session,
+        };
       }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 12);
-
-      // Create user
-      const user: User = {
-        id: Math.random().toString(36).substring(2, 15),
-        email,
-        name,
-        password: hashedPassword,
-        createdAt: new Date(),
-      };
-
-      users.push(user);
-
-      // Create session
-      const session = await this.createSession(user.id);
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        session,
-      };
     } catch (error) {
       throw error;
     }
@@ -64,29 +103,60 @@ export class TempAuth {
 
   static async signIn(email: string, password: string) {
     try {
-      // Find user
-      const user = users.find(u => u.email === email);
-      if (!user) {
-        throw new Error('Invalid credentials');
+      // Try database first
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { email }
+        });
+
+        if (!dbUser) {
+          throw new Error('Invalid credentials');
+        }
+
+        // Verify password
+        const isValid = await bcrypt.compare(password, dbUser.password);
+        if (!isValid) {
+          throw new Error('Invalid credentials');
+        }
+
+        // Create session
+        const session = await this.createSession(dbUser.id);
+
+        return {
+          user: {
+            id: dbUser.id,
+            email: dbUser.email,
+            name: dbUser.name,
+          },
+          session,
+        };
+      } catch (dbError) {
+        console.log('Database unavailable, checking memory storage:', dbError);
+
+        // Fallback to memory storage
+        const user = users.find(u => u.email === email);
+        if (!user) {
+          throw new Error('Invalid credentials');
+        }
+
+        // Verify password
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+          throw new Error('Invalid credentials');
+        }
+
+        // Create session
+        const session = await this.createSession(user.id);
+
+        return {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          },
+          session,
+        };
       }
-
-      // Verify password
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        throw new Error('Invalid credentials');
-      }
-
-      // Create session
-      const session = await this.createSession(user.id);
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        session,
-      };
     } catch (error) {
       throw error;
     }

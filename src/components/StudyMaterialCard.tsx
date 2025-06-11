@@ -228,9 +228,11 @@ This resource is designed to provide you with a thorough understanding of the su
                   <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-64 overflow-y-auto">
                     <div className="prose prose-gray prose-sm max-w-none">
                       {isRichMaterial && (material as StudyMaterial).content ? (
-                        <ReactMarkdown className="text-gray-700 text-sm leading-relaxed">
-                          {(material as StudyMaterial).content!}
-                        </ReactMarkdown>
+                        <div className="text-gray-700 text-sm leading-relaxed">
+                          <ReactMarkdown>
+                            {(material as StudyMaterial).content!}
+                          </ReactMarkdown>
+                        </div>
                       ) : (
                         <div className="whitespace-pre-line text-gray-700 text-sm leading-relaxed">
                           {materialData.content.text}
