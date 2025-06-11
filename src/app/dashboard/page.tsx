@@ -4,30 +4,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { Brain, Sparkles, Trophy, Star, Zap, MessageCircle, Upload, ArrowLeft } from 'lucide-react';
-import { SimpleCandyCrushRoadmap } from '@/components/SimpleCandyCrushRoadmap';
-import { MagicalLoader } from '@/components/MagicalLoader';
-import { StageModal } from '@/components/StageModal';
-import { ChatInterface } from '@/components/ChatInterface';
-import { UploadInterface } from '@/components/UploadInterface';
+import { CandyCrushPathway } from '@/components/CandyCrushPathway';
+import { StageSheet } from '@/components/StageSheet';
+import { FinalQuizModal } from '@/components/FinalQuizModal';
+
+import { RoadmapStage, FinalQuiz } from '@/types/roadmap';
 import Link from 'next/link';
 
-interface RoadmapStage {
-  id: string;
-  title: string;
-  description: string;
-  lessons: string[];
-  materials: string[];
-  quiz: {
-    question: string;
-    options: string[];
-    correct: number;
-  }[];
-  isUnlocked: boolean;
-  isCompleted: boolean;
-  position: { x: number; y: number };
-  color: string;
-  icon: any;
-}
+// Remove local interface since we're importing from types
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
@@ -37,10 +21,55 @@ export default function DashboardPage() {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [roadmapStages, setRoadmapStages] = useState<RoadmapStage[]>([]);
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
-  const [showChat, setShowChat] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
+  const [showFinalQuiz, setShowFinalQuiz] = useState(false);
+  const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
 
 
+
+  // Mock final quiz
+  const mockFinalQuiz: FinalQuiz = {
+    title: "Final Assessment: Trigonometry Mastery",
+    description: "Comprehensive test covering all trigonometry concepts",
+    questions: [
+      {
+        question: "What is the value of sin(30°)?",
+        options: ["1/2", "√3/2", "√2/2", "1"],
+        correct: 0,
+        explanation: "sin(30°) = 1/2. This is a fundamental trigonometric value.",
+        stage: "Sine Function"
+      },
+      {
+        question: "Which identity represents the Pythagorean theorem in trigonometry?",
+        options: ["sin²θ + cos²θ = 1", "tan²θ + 1 = sec²θ", "sin(2θ) = 2sin(θ)cos(θ)", "cos(θ) = sin(90° - θ)"],
+        correct: 0,
+        explanation: "sin²θ + cos²θ = 1 is the fundamental Pythagorean identity.",
+        stage: "Trig Identities"
+      },
+      {
+        question: "In which field is trigonometry NOT commonly used?",
+        options: ["Navigation", "Engineering", "Cooking", "Physics"],
+        correct: 2,
+        explanation: "While trigonometry has many applications, it's not commonly used in cooking.",
+        stage: "Applications"
+      },
+      {
+        question: "What is tan(45°)?",
+        options: ["0", "1", "√3", "undefined"],
+        correct: 1,
+        explanation: "tan(45°) = 1, as sin(45°) = cos(45°) = √2/2.",
+        stage: "Tangent Function"
+      },
+      {
+        question: "How many radians are in a full circle?",
+        options: ["π", "2π", "π/2", "4π"],
+        correct: 1,
+        explanation: "A full circle contains 2π radians, equivalent to 360°.",
+        stage: "Basic Angles"
+      }
+    ],
+    passingScore: 80,
+    timeLimit: 15
+  };
 
   // Mock roadmap data for trigonometry
   const mockTrigonometryRoadmap: RoadmapStage[] = [
@@ -202,8 +231,12 @@ export default function DashboardPage() {
         setGenerationProgress(100);
 
         if (data.success && data.roadmap) {
+          // Handle both old array format and new object format
+          const stages = Array.isArray(data.roadmap) ? data.roadmap : data.roadmap.stages;
+          const finalQuizData = data.roadmap.finalQuiz;
+
           // Transform AI roadmap to match our interface
-          const transformedRoadmap = data.roadmap.map((stage: any, index: number) => ({
+          const transformedRoadmap = stages.map((stage: any, index: number) => ({
             ...stage,
             isUnlocked: index === 0, // Only first stage is unlocked
             isCompleted: false,
@@ -212,6 +245,9 @@ export default function DashboardPage() {
 
           setTimeout(() => {
             setRoadmapStages(transformedRoadmap);
+            if (finalQuizData) {
+              setFinalQuiz(finalQuizData);
+            }
             setIsGenerating(false);
           }, 1000);
         } else {
@@ -224,6 +260,7 @@ export default function DashboardPage() {
         // Fallback to mock data on error
         setTimeout(() => {
           setRoadmapStages(mockTrigonometryRoadmap);
+          setFinalQuiz(mockFinalQuiz);
           setIsGenerating(false);
         }, 1000);
       }
@@ -232,10 +269,20 @@ export default function DashboardPage() {
     generateRoadmap();
   }, [prompt]);
 
-  const handleStageClick = (stageId: string) => {
-    const stage = roadmapStages.find(s => s.id === stageId);
-    if (stage && stage.isUnlocked) {
+  const handleStageClick = (stage: RoadmapStage) => {
+    if (stage.isUnlocked) {
       setSelectedStage(stage);
+    }
+  };
+
+  const handleFinalQuizClick = () => {
+    // Check if all stages are completed
+    const allCompleted = roadmapStages.every(stage => stage.isCompleted);
+    if (allCompleted) {
+      setFinalQuiz(mockFinalQuiz);
+      setShowFinalQuiz(true);
+    } else {
+      alert('Complete all stages before taking the final quiz!');
     }
   };
 
@@ -254,6 +301,15 @@ export default function DashboardPage() {
 
     // Show success message
     console.log(`Stage ${stageId} completed! Next stage unlocked.`);
+  };
+
+  const handleFinalQuizComplete = (score: number, passed: boolean) => {
+    setShowFinalQuiz(false);
+    if (passed) {
+      alert(`Congratulations! You scored ${score}% and completed the course!`);
+    } else {
+      alert(`You scored ${score}%. Review the materials and try again!`);
+    }
   };
 
   if (isGenerating) {
@@ -343,116 +399,38 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Magical background effects */}
-      <div className="absolute inset-0">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.5, 0.2],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
+      {/* Candy Crush Style Roadmap - Full Screen */}
+      <div className="relative z-10 w-full h-screen">
+        <CandyCrushPathway
+          stages={roadmapStages}
+          onStageClick={handleStageClick}
+          onFinalQuizClick={handleFinalQuizClick}
         />
       </div>
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-20 p-6"
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 text-gray-300 hover:text-white transition-colors"
-            >
-              <ArrowLeft size={20} />
-              Back
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                {prompt} Mastery Path
-              </h1>
-              <p className="text-gray-400 mt-1">Your personalized learning journey</p>
-            </div>
-          </div>
+      {/* Stage Sheet */}
+      {selectedStage && (
+        <StageSheet
+          stage={selectedStage}
+          isOpen={!!selectedStage}
+          onClose={() => setSelectedStage(null)}
+          onComplete={handleStageComplete}
+        />
+      )}
 
-          <div className="flex gap-4">
-            <button
-              onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:scale-105 transition-transform"
-            >
-              <Upload size={20} />
-              Upload Materials
-            </button>
-            <button
-              onClick={() => setShowChat(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:scale-105 transition-transform"
-            >
-              <MessageCircle size={20} />
-              AI Tutor Chat
-            </button>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Candy Crush Style Roadmap */}
-      <div className="relative z-10 px-6 pb-6">
-        <SimpleCandyCrushRoadmap stages={roadmapStages} onStageClick={handleStageClick} />
-      </div>
-
-      {/* Stage Modal */}
+      {/* Final Quiz Modal */}
       <AnimatePresence>
-        {selectedStage && (
-          <StageModal
-            stage={selectedStage}
-            onClose={() => setSelectedStage(null)}
-            onComplete={handleStageComplete}
+        {showFinalQuiz && finalQuiz && (
+          <FinalQuizModal
+            finalQuiz={finalQuiz}
+            onClose={() => setShowFinalQuiz(false)}
+            onComplete={handleFinalQuizComplete}
           />
         )}
       </AnimatePresence>
 
-      {/* Chat Interface */}
-      <AnimatePresence>
-        {showChat && (
-          <ChatInterface
-            onClose={() => setShowChat(false)}
-            context={prompt}
-          />
-        )}
-      </AnimatePresence>
 
-      {/* Upload Interface */}
-      <AnimatePresence>
-        {showUpload && (
-          <UploadInterface
-            onClose={() => setShowUpload(false)}
-            onUpload={(files) => {
-              // Handle file upload
-              console.log('Files uploaded:', files);
-              setShowUpload(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

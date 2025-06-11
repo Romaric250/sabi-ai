@@ -24,7 +24,7 @@ async function generateRoadmapWithAI(prompt: string): Promise<RoadmapStage[]> {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const aiPrompt = `
-You are an expert educational AI that creates personalized learning roadmaps. Your task is to break down any learning goal into a structured roadmap consisting of 6 logical learning stages in a Candy Crush-style progression.
+You are an expert educational AI that creates comprehensive learning roadmaps with rich content and resources.
 
 IMPORTANT: You must respond with ONLY valid JSON. No explanations, no markdown, no additional text.
 
@@ -32,40 +32,75 @@ For the learning goal: "${prompt}"
 
 Create a roadmap with exactly this JSON structure:
 
-[
-  {
-    "id": "1",
-    "title": "Stage Title (max 3 words)",
-    "description": "Brief explanation of what this stage covers (max 50 chars)",
-    "lessons": ["Lesson 1", "Lesson 2", "Lesson 3"],
-    "materials": ["Material 1", "Material 2", "Material 3"],
-    "quiz": [
+{
+  "stages": [
+    {
+      "id": "1",
+      "title": "Stage Title (max 3 words)",
+      "description": "Brief explanation of what this stage covers",
+      "lessons": ["Lesson 1", "Lesson 2", "Lesson 3"],
+      "materials": [
+        {
+          "title": "Introduction to Topic",
+          "type": "text",
+          "content": "# Introduction to [Topic]\n\n## Overview\nDetailed explanation with examples, definitions, and practical applications.\n\n## Key Concepts\n- **Concept 1**: Definition and explanation\n- **Concept 2**: Definition and explanation\n- **Concept 3**: Definition and explanation\n\n## Step-by-Step Guide\n1. First step with detailed explanation\n2. Second step with examples\n3. Third step with practice exercises\n\n## Real-World Applications\nExplain how this topic applies in real scenarios with specific examples.\n\n## Summary\nKey takeaways and what students should remember.",
+          "readTime": "10 min"
+        },
+        {
+          "title": "Video Tutorial",
+          "type": "video",
+          "url": "https://www.youtube.com/watch?v=kfF40MiS7zA",
+          "duration": "15 min",
+          "description": "Comprehensive video covering the fundamentals"
+        },
+        {
+          "title": "Visual Guide",
+          "type": "image",
+          "imageUrl": "https://picsum.photos/800/600?random=1",
+          "description": "Diagram or infographic explaining key concepts"
+        }
+      ],
+      "quiz": [
+        {
+          "question": "Question text?",
+          "options": ["Option A", "Option B", "Option C", "Option D"],
+          "correct": 0,
+          "explanation": "Detailed explanation of why this answer is correct"
+        }
+      ],
+      "position": { "x": 2, "y": 0 },
+      "color": "from-green-400 to-emerald-500"
+    }
+  ],
+  "finalQuiz": {
+    "title": "Final Assessment: ${prompt}",
+    "description": "Comprehensive test covering all stages",
+    "questions": [
       {
-        "question": "Question text?",
+        "question": "Comprehensive question covering multiple stages",
         "options": ["Option A", "Option B", "Option C", "Option D"],
-        "correct": 0
-      },
-      {
-        "question": "Question text?",
-        "options": ["Option A", "Option B", "Option C", "Option D"],
-        "correct": 1
+        "correct": 0,
+        "explanation": "Detailed explanation",
+        "stage": "Multiple stages"
       }
     ],
-    "position": { "x": 2, "y": 0 },
-    "color": "from-green-400 to-emerald-500"
+    "passingScore": 80,
+    "timeLimit": 30
   }
-]
+}
 
 Requirements:
 1. Create exactly 6 stages that build upon each other
-2. Each stage should have 3 lessons, 3 materials, and 2 quiz questions
+2. Each stage should have 3 lessons, rich materials with actual content, and 2 quiz questions with explanations
 3. Position stages in a path: stage 1 at (2,0), stage 2 at (1,1), stage 3 at (3,1), stage 4 at (2,2), stage 5 at (1,3), stage 6 at (3,3)
 4. Use these colors in order: "from-green-400 to-emerald-500", "from-blue-400 to-cyan-500", "from-purple-400 to-pink-500", "from-orange-400 to-red-500", "from-indigo-400 to-purple-500", "from-yellow-400 to-orange-500"
-5. Make quiz questions specific to the learning topic with realistic multiple choice options
-6. Ensure logical progression from beginner to advanced concepts
-7. Keep titles short and descriptions concise
+5. Include actual educational content in text materials (200+ words each)
+6. Suggest real YouTube video URLs when possible
+7. Use random image URLs from picsum.photos with different random numbers
+8. Create a final quiz with 10 comprehensive questions
+9. Ensure logical progression from beginner to advanced concepts
 
-Return ONLY the JSON array, nothing else.
+Return ONLY the JSON object, nothing else.
 `;
 
     const result = await model.generateContent(aiPrompt);
@@ -85,8 +120,10 @@ Return ONLY the JSON array, nothing else.
 
       console.log('Cleaned roadmap response:', cleanedText);
 
-      const roadmap = JSON.parse(cleanedText);
-      return roadmap;
+      const roadmapData = JSON.parse(cleanedText);
+
+      // Return the stages array from the new structure
+      return roadmapData.stages || roadmapData;
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
       console.error('Raw text:', text);

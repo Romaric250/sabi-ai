@@ -54,7 +54,7 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/stage-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,9 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
           message: inputMessage,
           context: context,
           stageId: stageId,
-          stageTitle: stageTitle
+          stageTitle: stageTitle,
+          stageDescription: `Learning stage focused on ${stageTitle}`,
+          lessons: [`Understanding ${stageTitle}`, `Practical applications`, `Key concepts`]
         }),
       });
 
@@ -117,24 +119,24 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
-        className="bg-slate-800/90 backdrop-blur-sm rounded-3xl border border-slate-700/50 w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-3xl border border-gray-200 shadow-xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-slate-700/50 bg-gradient-to-r from-purple-500/20 to-blue-500/20">
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
                 <Bot className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">AI Tutor</h3>
-                <p className="text-sm text-gray-300">{stageTitle} • {context}</p>
+                <h3 className="text-lg font-bold text-gray-900">AI Tutor</h3>
+                <p className="text-sm text-gray-600">{stageTitle} • {context}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
             >
               <X size={16} />
             </button>
@@ -153,20 +155,20 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
                 className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.sender === 'ai' && (
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
-                
+
                 <div className={`max-w-[80%] ${message.sender === 'user' ? 'order-1' : ''}`}>
                   <div className={`p-3 rounded-2xl ${
                     message.sender === 'user'
-                      ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
-                      : 'bg-slate-700/50 text-gray-100 border border-slate-600/30'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                      : 'bg-gray-100 text-gray-900 border border-gray-200'
                   }`}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1 px-3">
+                  <p className="text-xs text-gray-500 mt-1 px-3">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -186,13 +188,13 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
               animate={{ opacity: 1, y: 0 }}
               className="flex gap-3 justify-start"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="bg-slate-700/50 border border-slate-600/30 rounded-2xl p-3">
+              <div className="bg-gray-100 border border-gray-200 rounded-2xl p-3">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-                  <span className="text-gray-300 text-sm">AI is thinking...</span>
+                  <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                  <span className="text-gray-700 text-sm">AI is thinking...</span>
                 </div>
               </div>
             </motion.div>
@@ -202,21 +204,21 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-slate-700/50">
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
           <div className="flex gap-3">
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={`Ask about ${stageTitle}...`}
-              className="flex-1 bg-slate-700/50 border border-slate-600/30 rounded-xl px-4 py-3 text-white placeholder-gray-400 resize-none focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50"
+              className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               rows={1}
               disabled={isLoading}
             />
             <button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -225,8 +227,8 @@ export function StageChatInterface({ onClose, context, stageId, stageTitle }: St
               )}
             </button>
           </div>
-          
-          <div className="mt-2 text-xs text-gray-400 text-center">
+
+          <div className="mt-2 text-xs text-gray-500 text-center">
             Press Enter to send • Shift+Enter for new line
           </div>
         </div>
