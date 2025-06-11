@@ -29,7 +29,20 @@ export function StageSheet({ stage, isOpen, onClose, onComplete }: StageSheetPro
   const [showResults, setShowResults] = useState(false);
 
   // Resize state
-  const [sheetWidth, setSheetWidth] = useState(800);
+  const [sheetWidth, setSheetWidth] = useState(() => {
+    // Get saved width from localStorage or default to 800
+    if (typeof window !== 'undefined') {
+      const savedWidth = localStorage.getItem('stageSheetWidth');
+      if (savedWidth) {
+        const width = parseInt(savedWidth, 10);
+        // Validate the saved width is within reasonable bounds
+        const minWidth = 400;
+        const maxWidth = window.innerWidth * 0.9;
+        return Math.max(minWidth, Math.min(maxWidth, width));
+      }
+    }
+    return 800;
+  });
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);
 
@@ -160,6 +173,30 @@ export function StageSheet({ stage, isOpen, onClose, onComplete }: StageSheetPro
     e.preventDefault();
   };
 
+  // Save width to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('stageSheetWidth', sheetWidth.toString());
+    }
+  }, [sheetWidth]);
+
+  // Handle window resize to ensure sheet width stays within bounds
+  useEffect(() => {
+    const handleWindowResize = () => {
+      const maxWidth = window.innerWidth * 0.9;
+      const minWidth = 400;
+
+      if (sheetWidth > maxWidth) {
+        setSheetWidth(maxWidth);
+      } else if (sheetWidth < minWidth) {
+        setSheetWidth(minWidth);
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, [sheetWidth]);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
@@ -168,7 +205,8 @@ export function StageSheet({ stage, isOpen, onClose, onComplete }: StageSheetPro
       const minWidth = 400;
       const maxWidth = window.innerWidth * 0.9;
 
-      setSheetWidth(Math.max(minWidth, Math.min(maxWidth, newWidth)));
+      const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+      setSheetWidth(constrainedWidth);
     };
 
     const handleMouseUp = () => {
