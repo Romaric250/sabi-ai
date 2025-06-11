@@ -3,15 +3,20 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Brain, Sparkles, Zap, Target, ArrowRight, Play, Star } from 'lucide-react';
+import { Brain, Sparkles, Zap, Target, ArrowRight, Play, Star, LogOut, User } from 'lucide-react';
 import { TypewriterText } from './TypewriterText';
 import { GlowingButton } from './GlowingButton';
 import { ParticleField } from './ParticleField';
+import { AuthModal } from './AuthModal';
+import { useTempSession } from '@/lib/temp-auth-client';
 
 export function HeroSection() {
   const router = useRouter();
+  const { data, isPending, signOut } = useTempSession();
+  const session = data?.user;
   const [currentExample, setCurrentExample] = useState(0);
   const [inputValue, setInputValue] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const examples = [
     "I want to learn Trigonometry",
     "Teach me Advanced Calculus",
@@ -28,13 +33,69 @@ export function HeroSection() {
   }, []);
 
   const handleGenerate = () => {
+    if (!session) {
+      setShowAuthModal(true);
+      return;
+    }
     const prompt = inputValue.trim() || examples[currentExample];
     router.push(`/dashboard?prompt=${encodeURIComponent(prompt)}`);
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 overflow-hidden">
       <ParticleField />
+
+      {/* Navigation */}
+      <nav className="relative z-20 flex items-center justify-between py-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex items-center gap-3"
+        >
+          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+            <Brain className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-2xl font-bold text-white">LearnPath</span>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex items-center gap-4"
+        >
+          {session ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                <User className="w-4 h-4 text-white" />
+                <span className="text-white text-sm">{session.name || session.email}</span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm rounded-full border border-red-500/30 text-red-300 hover:text-red-200 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Sign Out</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 text-white hover:text-white transition-colors"
+            >
+              Sign In
+            </button>
+          )}
+        </motion.div>
+      </nav>
+
+      {/* Main content container */}
+      <div className="flex-1 flex items-center justify-center">{/* Content will go here */}
       
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -231,6 +292,19 @@ export function HeroSection() {
           </motion.div>
         </motion.div>
       </div>
+      </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          // After successful auth, proceed with generation
+          const prompt = inputValue.trim() || examples[currentExample];
+          router.push(`/dashboard?prompt=${encodeURIComponent(prompt)}`);
+        }}
+      />
     </section>
   );
 }

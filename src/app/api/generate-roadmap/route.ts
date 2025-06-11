@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { findSimilarRoadmap, storeRoadmap } from '@/lib/vector-db';
+import { auth } from '@/lib/auth';
 
 interface RoadmapStage {
   id: string;
@@ -281,7 +283,7 @@ function getMockRoadmap(prompt: string): RoadmapStage[] {
 export async function POST(request: NextRequest) {
   try {
     const { prompt } = await request.json();
-    
+
     if (!prompt) {
       return NextResponse.json(
         { error: 'Prompt is required' },
@@ -289,13 +291,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if we have a similar roadmap in the vector database
+    console.log('Searching for similar roadmap for prompt:', prompt);
+    const existingRoadmap = await findSimilarRoadmap(prompt);
+
+    if (existingRoadmap) {
+      console.log('Found existing roadmap, returning cached result');
+      return NextResponse.json({
+        roadmap: existingRoadmap.content,
+        cached: true,
+        message: 'Retrieved from cache'
+      });
+    }
+
     // Generate roadmap using Gemini AI
+    console.log('Generating new roadmap with AI for prompt:', prompt);
     const roadmap = await generateRoadmapWithAI(prompt);
-    
+
+    // Store the new roadmap in the vector database for future use
+    try {
+      await storeRoadmap(prompt, roadmap);
+      console.log('Successfully stored roadmap in vector database');
+    } catch (storeError) {
+      console.error('Failed to store roadmap in vector database:', storeError);
+      // Continue anyway, don't fail the request
+    }
+
     return NextResponse.json({
       success: true,
       roadmap,
-      prompt
+      prompt,
+      cached: false,
+      message: 'Generated new roadmap'
     });
     
   } catch (error) {

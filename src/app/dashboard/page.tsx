@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Brain, Sparkles, Trophy, Star, Zap, MessageCircle, Upload, ArrowLeft } from 'lucide-react';
 import { CandyCrushPathway } from '@/components/CandyCrushPathway';
 import { StageSheet } from '@/components/StageSheet';
 import { FinalQuizModal } from '@/components/FinalQuizModal';
+import { useTempSession } from '@/lib/temp-auth-client';
 
 import { RoadmapStage, FinalQuiz } from '@/types/roadmap';
 import Link from 'next/link';
@@ -15,6 +16,9 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { data, isPending } = useTempSession();
+  const session = data?.user;
   const prompt = searchParams.get('prompt') || 'Trigonometry';
 
   const [isGenerating, setIsGenerating] = useState(true);
@@ -23,6 +27,34 @@ export default function DashboardPage() {
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
   const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
+
+  // Redirect to home if not authenticated
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/');
+    }
+  }, [session, isPending, router]);
+
+  // Show loading while checking authentication
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-white text-lg">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!session) {
+    return null;
+  }
 
 
 
