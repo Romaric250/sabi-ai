@@ -17,7 +17,6 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data, isPending } = authClient.useSession();
-  const session = data?.user;
   const prompt = searchParams.get("prompt");
   const roadmapId = searchParams.get("roadmapId");
 
@@ -28,18 +27,7 @@ export default function DashboardPage() {
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
   const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
 
-  // Redirect to home if not authenticated
   useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/");
-    }
-  }, [session, isPending, router]);
-
-  // Generate roadmap effect
-  useEffect(() => {
-    if (!session) return; // Don't generate if not authenticated
-
-    // Real AI roadmap generation
     const generateRoadmap = async () => {
       setIsGenerating(true);
       setGenerationProgress(0);
@@ -114,7 +102,7 @@ export default function DashboardPage() {
     };
 
     generateRoadmap();
-  }, [prompt, session]);
+  }, [prompt]);
 
   // Mock final quiz
   const mockFinalQuiz: FinalQuiz = {
@@ -381,27 +369,6 @@ export default function DashboardPage() {
       alert(`You scored ${score}%. Review the materials and try again!`);
     }
   };
-
-  // Show loading while checking authentication
-  if (isPending) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
-          />
-          <p className="text-white text-lg">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render anything if not authenticated (will redirect)
-  if (!session) {
-    return null;
-  }
 
   if (isGenerating) {
     return (
