@@ -1,61 +1,15 @@
 "use client";
 
+import { authClient } from "@/lib/auth-client";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Brain,
-  LogOut,
-  Play,
-  Sparkles,
-  Star,
-  Target,
-  User,
-  Zap,
-} from "lucide-react";
+import { Brain, LogOut, Play, Target, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AuthModal } from "./AuthModal";
 import { GlowingButton } from "./GlowingButton";
-import { ParticleField } from "./ParticleField";
-import { authClient } from "@/lib/auth-client";
-
-export function HeroSection() {
-  const router = useRouter();
-  const [currentExample, setCurrentExample] = useState(0);
-  const { data, isPending } = authClient.useSession();
-
-  const [inputValue, setInputValue] = useState("");
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const examples = [
-    "I want to learn Trigonometry",
-    "Teach me Advanced Calculus",
-    "How do I master Linear Algebra?",
-    "I want to learn Quantum Physics",
-    "Show me Organic Chemistry fundamentals",
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentExample((prev) => (prev + 1) % examples.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleGenerate = () => {
-    const prompt = inputValue.trim() || examples[currentExample];
-    router.push(`/dashboard?prompt=${encodeURIComponent(prompt)}`);
-  };
-
-  const handleSignOut = async () => {
-    await authClient.signOut();
-  };
-
-  return (
-    <section className="relative min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 overflow-hidden">
-      <ParticleField />
-
-      {/* Navigation */}
-      <nav className="relative z-20 flex items-center justify-between py-6">
+import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
+{
+  /* <nav className="relative z-20 flex items-center justify-between py-6">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -99,6 +53,90 @@ export function HeroSection() {
             </button>
           )}
         </motion.div>
+      </nav> */
+}
+
+export function HeroSection() {
+  const router = useRouter();
+  const [currentExample, setCurrentExample] = useState(0);
+  const { data, isPending } = authClient.useSession();
+
+  const [inputValue, setInputValue] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const examples = [
+    "I want to learn Trigonometry",
+    "Teach me Advanced Calculus",
+    "How do I master Linear Algebra?",
+    "I want to learn Quantum Physics",
+    "Show me Organic Chemistry fundamentals",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentExample((prev) => (prev + 1) % examples.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const prompt = inputValue;
+    router.push(`/dashboard?prompt=${encodeURIComponent(prompt)}`);
+  };
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+  };
+
+  return (
+    <section className="relative min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 text">
+      {/* <ParticleField /> */}
+
+      {/* Navigation */}
+      <nav className="z-20 flex items-center justify-between py-6 fixed top-0 left-0 right-0 px-20">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex items-center gap-3"
+        >
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+            <Brain className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-2xl font-bold text-primary">lewa</span>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="flex items-center gap-4"
+        >
+          {data?.user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                <User className="w-4 h-4 text-white" />
+                <span className="text-white text-sm">
+                  {data.user.name || data.user.email}
+                </span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm rounded-full border border-red-500/30 text-red-300 hover:text-red-200 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Sign Out</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full border border-white/20 text-white hover:text-white transition-colors"
+            >
+              Sign In
+            </button>
+          )}
+        </motion.div>
       </nav>
 
       {/* Main content container */}
@@ -106,7 +144,7 @@ export function HeroSection() {
         {/* Content will go here */}
 
         {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* <div className="absolute inset-0 overflow-hidden">
           <motion.div
             className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"
             animate={{
@@ -131,11 +169,11 @@ export function HeroSection() {
               ease: "easeInOut",
             }}
           />
-        </div>
+        </div> */}
 
         <div className="relative z-10 max-w-7xl mx-auto text-center">
           {/* Floating icons */}
-          <motion.div
+          {/* <motion.div
             className="absolute -top-20 -left-20 text-purple-400"
             animate={{
               y: [0, -20, 0],
@@ -178,7 +216,7 @@ export function HeroSection() {
             }}
           >
             <Zap size={30} />
-          </motion.div>
+          </motion.div> */}
 
           {/* Main content */}
           <motion.div
@@ -187,35 +225,18 @@ export function HeroSection() {
             transition={{ duration: 1, delay: 0.2 }}
             className="space-y-8"
           >
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full border border-purple-500/30 backdrop-blur-sm"
-            >
-              <Star className="w-4 h-4 text-yellow-400" />
-              <span className="text-sm font-medium text-white">
-                Revolutionary AI-Powered Learning
-              </span>
-            </motion.div>
-
             {/* Main headline */}
             <div className="space-y-4">
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.7 }}
-                className="text-5xl sm:text-6xl lg:text-8xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent leading-tight"
+                className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight font-lora"
               >
-                Learn Anything with
-                <br />
-                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-                  Visual Roadmaps
-                </span>
+                What can i help you understand?
               </motion.h1>
 
-              <motion.p
+              {/* <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.9 }}
@@ -227,10 +248,8 @@ export function HeroSection() {
                 <span className="text-purple-300">
                   AI-powered roadmaps that adapt to you.
                 </span>
-              </motion.p>
+              </motion.p> */}
             </div>
-
-            {/* Interactive demo input */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -238,34 +257,27 @@ export function HeroSection() {
               className="max-w-2xl mx-auto"
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl blur opacity-75"></div>
-                <div className="relative bg-slate-800/90 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/30">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && handleGenerate()
-                        }
-                        placeholder={examples[currentExample]}
-                        className="text-lg text-white placeholder-gray-400 bg-transparent border-none outline-none w-full"
-                      />
-                    </div>
-                    <GlowingButton
-                      onClick={handleGenerate}
-                      className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold flex items-center gap-2 hover:scale-105 transition-transform"
-                    >
-                      Generate <ArrowRight size={20} />
-                    </GlowingButton>
-                  </div>
+                <div className="relative">
+                  <form
+                    onSubmit={handleGenerate}
+                    className="flex flex-col gap-2"
+                  >
+                    <Textarea
+                      placeholder="Enter your prompt"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      className="h-20 resize-none"
+                    />
+                    <Button className="sr-only" type="submit">
+                      Generate
+                    </Button>
+                  </form>
                 </div>
               </div>
             </motion.div>
 
             {/* CTA Buttons */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.3 }}
@@ -283,43 +295,31 @@ export function HeroSection() {
                 <Target size={24} />
                 See Demo
               </button>
-            </motion.div>
+            </motion.div> */}
 
             {/* Stats */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.5 }}
               className="grid grid-cols-3 gap-8 max-w-md mx-auto pt-8"
             >
               <div className="text-center">
-                <div className="text-3xl font-bold text-white">10K+</div>
+                <div className="text-3xl font-bold ">10K+</div>
                 <div className="text-sm text-gray-400">Roadmaps Created</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-white">95%</div>
+                <div className="text-3xl font-bold">95%</div>
                 <div className="text-sm text-gray-400">Success Rate</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-white">24/7</div>
+                <div className="text-3xl font-bold ">24/7</div>
                 <div className="text-sm text-gray-400">AI Support</div>
               </div>
-            </motion.div>
+            </motion.div> */}
           </motion.div>
         </div>
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false);
-          // After successful auth, proceed with generation
-          const prompt = inputValue.trim() || examples[currentExample];
-          router.push(`/dashboard?prompt=${encodeURIComponent(prompt)}`);
-        }}
-      />
     </section>
   );
 }
