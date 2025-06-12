@@ -1,27 +1,30 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
+import { sendEmail } from "@/lib/send-email";
 
-const prisma = new PrismaClient();
+const db = new PrismaClient();
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
+  database: prismaAdapter(db, {
     provider: "postgresql",
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
   },
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      console.log({ url });
+
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your email",
+        text: `Click the link to verify your email: ${url}`,
+      });
+    },
   },
-  baseURL: process.env.NEXTAUTH_URL || "http://localhost:3000",
-  trustedOrigins: [
-    "http://localhost:3000",
-    process.env.NEXTAUTH_URL || "http://localhost:3000",
-  ],
 });
 
 export type Session = typeof auth.$Infer.Session;
-export type User = typeof auth.$Infer.User;

@@ -1,26 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Brain, Sparkles, Trophy, Star, Zap, MessageCircle, Upload, ArrowLeft } from 'lucide-react';
-import { CandyCrushPathway } from '@/components/CandyCrushPathway';
-import { StageSheet } from '@/components/StageSheet';
-import { FinalQuizModal } from '@/components/FinalQuizModal';
-import { useTempSession } from '@/lib/temp-auth-client';
+import { CandyCrushPathway } from "@/components/CandyCrushPathway";
+import { FinalQuizModal } from "@/components/FinalQuizModal";
+import { StageSheet } from "@/components/StageSheet";
+import { AnimatePresence, motion } from "framer-motion";
+import { Brain, Sparkles, Star, Trophy, Zap } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { RoadmapStage, FinalQuiz } from '@/types/roadmap';
-import Link from 'next/link';
+import { authClient } from "@/lib/auth-client";
+import { FinalQuiz, RoadmapStage } from "@/types/roadmap";
 
 // Remove local interface since we're importing from types
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data, isPending } = useTempSession();
+  const { data, isPending } = authClient.useSession();
   const session = data?.user;
-  const prompt = searchParams.get('prompt');
-  const roadmapId = searchParams.get('roadmapId');
+  const prompt = searchParams.get("prompt");
+  const roadmapId = searchParams.get("roadmapId");
 
   const [isGenerating, setIsGenerating] = useState(true);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -32,7 +31,7 @@ export default function DashboardPage() {
   // Redirect to home if not authenticated
   useEffect(() => {
     if (!isPending && !session) {
-      router.push('/');
+      router.push("/");
     }
   }, [session, isPending, router]);
 
@@ -48,19 +47,19 @@ export default function DashboardPage() {
       try {
         // Simulate progress during AI generation
         const progressInterval = setInterval(() => {
-          setGenerationProgress(prev => {
+          setGenerationProgress((prev) => {
             if (prev >= 90) return prev;
             return prev + Math.random() * 10;
           });
         }, 200);
 
-        console.log('Generating roadmap for:', prompt);
+        console.log("Generating roadmap for:", prompt);
 
         // Call the real AI API
-        const response = await fetch('/api/generate-roadmap', {
-          method: 'POST',
+        const response = await fetch("/api/generate-roadmap", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ prompt }),
         });
@@ -70,23 +69,27 @@ export default function DashboardPage() {
         }
 
         const data = await response.json();
-        console.log('AI Response:', data);
+        console.log("AI Response:", data);
 
         clearInterval(progressInterval);
         setGenerationProgress(100);
 
         if (data.success && data.roadmap) {
           // Handle both old array format and new object format
-          const stages = Array.isArray(data.roadmap) ? data.roadmap : data.roadmap.stages;
+          const stages = Array.isArray(data.roadmap)
+            ? data.roadmap
+            : data.roadmap.stages;
           const finalQuizData = data.roadmap.finalQuiz;
 
           // Transform AI roadmap to match our interface
-          const transformedRoadmap = stages.map((stage: any, index: number) => ({
-            ...stage,
-            isUnlocked: index === 0, // Only first stage is unlocked
-            isCompleted: false,
-            icon: [Zap, Brain, Sparkles, Star, Trophy, Brain][index] || Brain
-          }));
+          const transformedRoadmap = stages.map(
+            (stage: any, index: number) => ({
+              ...stage,
+              isUnlocked: index === 0, // Only first stage is unlocked
+              isCompleted: false,
+              icon: [Zap, Brain, Sparkles, Star, Trophy, Brain][index] || Brain,
+            })
+          );
 
           setTimeout(() => {
             setRoadmapStages(transformedRoadmap);
@@ -96,11 +99,10 @@ export default function DashboardPage() {
             setIsGenerating(false);
           }, 1000);
         } else {
-          throw new Error('Failed to generate roadmap');
+          throw new Error("Failed to generate roadmap");
         }
-
       } catch (error) {
-        console.error('Error generating roadmap:', error);
+        console.error("Error generating roadmap:", error);
 
         // Fallback to mock data on error
         setTimeout(() => {
@@ -114,8 +116,6 @@ export default function DashboardPage() {
     generateRoadmap();
   }, [prompt, session]);
 
-
-
   // Mock final quiz
   const mockFinalQuiz: FinalQuiz = {
     title: "Final Assessment: Trigonometry Mastery",
@@ -125,166 +125,217 @@ export default function DashboardPage() {
         question: "What is the value of sin(30°)?",
         options: ["1/2", "√3/2", "√2/2", "1"],
         correct: 0,
-        explanation: "sin(30°) = 1/2. This is a fundamental trigonometric value.",
-        stage: "Sine Function"
+        explanation:
+          "sin(30°) = 1/2. This is a fundamental trigonometric value.",
+        stage: "Sine Function",
       },
       {
-        question: "Which identity represents the Pythagorean theorem in trigonometry?",
-        options: ["sin²θ + cos²θ = 1", "tan²θ + 1 = sec²θ", "sin(2θ) = 2sin(θ)cos(θ)", "cos(θ) = sin(90° - θ)"],
+        question:
+          "Which identity represents the Pythagorean theorem in trigonometry?",
+        options: [
+          "sin²θ + cos²θ = 1",
+          "tan²θ + 1 = sec²θ",
+          "sin(2θ) = 2sin(θ)cos(θ)",
+          "cos(θ) = sin(90° - θ)",
+        ],
         correct: 0,
-        explanation: "sin²θ + cos²θ = 1 is the fundamental Pythagorean identity.",
-        stage: "Trig Identities"
+        explanation:
+          "sin²θ + cos²θ = 1 is the fundamental Pythagorean identity.",
+        stage: "Trig Identities",
       },
       {
         question: "In which field is trigonometry NOT commonly used?",
         options: ["Navigation", "Engineering", "Cooking", "Physics"],
         correct: 2,
-        explanation: "While trigonometry has many applications, it's not commonly used in cooking.",
-        stage: "Applications"
+        explanation:
+          "While trigonometry has many applications, it's not commonly used in cooking.",
+        stage: "Applications",
       },
       {
         question: "What is tan(45°)?",
         options: ["0", "1", "√3", "undefined"],
         correct: 1,
         explanation: "tan(45°) = 1, as sin(45°) = cos(45°) = √2/2.",
-        stage: "Tangent Function"
+        stage: "Tangent Function",
       },
       {
         question: "How many radians are in a full circle?",
         options: ["π", "2π", "π/2", "4π"],
         correct: 1,
         explanation: "A full circle contains 2π radians, equivalent to 360°.",
-        stage: "Basic Angles"
-      }
+        stage: "Basic Angles",
+      },
     ],
     passingScore: 80,
-    timeLimit: 15
+    timeLimit: 15,
   };
 
   // Mock roadmap data for trigonometry
   const mockTrigonometryRoadmap: RoadmapStage[] = [
     {
-      id: '1',
-      title: 'Basic Angles',
-      description: 'Understanding degrees, radians, and angle measurement',
-      lessons: ['What are angles?', 'Degrees vs Radians', 'Unit Circle Introduction'],
-      materials: ['Interactive Angle Visualizer', 'Degree-Radian Converter', 'Practice Worksheets'],
+      id: "1",
+      title: "Basic Angles",
+      description: "Understanding degrees, radians, and angle measurement",
+      lessons: [
+        "What are angles?",
+        "Degrees vs Radians",
+        "Unit Circle Introduction",
+      ],
+      materials: [
+        "Interactive Angle Visualizer",
+        "Degree-Radian Converter",
+        "Practice Worksheets",
+      ],
       quiz: [
         {
-          question: 'How many degrees are in a full circle?',
-          options: ['180°', '270°', '360°', '90°'],
-          correct: 2
+          question: "How many degrees are in a full circle?",
+          options: ["180°", "270°", "360°", "90°"],
+          correct: 2,
         },
         {
-          question: 'What is π radians in degrees?',
-          options: ['90°', '180°', '270°', '360°'],
-          correct: 1
-        }
+          question: "What is π radians in degrees?",
+          options: ["90°", "180°", "270°", "360°"],
+          correct: 1,
+        },
       ],
       isUnlocked: true,
       isCompleted: false,
       position: { x: 2, y: 0 },
-      color: 'from-green-400 to-emerald-500',
-      icon: Zap
+      color: "from-green-400 to-emerald-500",
+      icon: Zap,
     },
     {
-      id: '2',
-      title: 'Sine Function',
-      description: 'Master the sine function and its properties',
-      lessons: ['Definition of Sine', 'Sine Wave Properties', 'Sine in Right Triangles'],
-      materials: ['Sine Wave Simulator', 'Triangle Calculator', 'Graphing Tool'],
+      id: "2",
+      title: "Sine Function",
+      description: "Master the sine function and its properties",
+      lessons: [
+        "Definition of Sine",
+        "Sine Wave Properties",
+        "Sine in Right Triangles",
+      ],
+      materials: [
+        "Sine Wave Simulator",
+        "Triangle Calculator",
+        "Graphing Tool",
+      ],
       quiz: [
         {
-          question: 'What is sin(90°)?',
-          options: ['0', '1', '-1', '0.5'],
-          correct: 1
-        }
+          question: "What is sin(90°)?",
+          options: ["0", "1", "-1", "0.5"],
+          correct: 1,
+        },
       ],
       isUnlocked: false,
       isCompleted: false,
       position: { x: 1, y: 1 },
-      color: 'from-blue-400 to-cyan-500',
-      icon: Brain
+      color: "from-blue-400 to-cyan-500",
+      icon: Brain,
     },
     {
-      id: '3',
-      title: 'Cosine Function',
-      description: 'Explore cosine and its relationship to sine',
-      lessons: ['Definition of Cosine', 'Cosine Wave Properties', 'Cosine in Right Triangles'],
-      materials: ['Cosine Wave Simulator', 'Comparison Tool', 'Practice Problems'],
+      id: "3",
+      title: "Cosine Function",
+      description: "Explore cosine and its relationship to sine",
+      lessons: [
+        "Definition of Cosine",
+        "Cosine Wave Properties",
+        "Cosine in Right Triangles",
+      ],
+      materials: [
+        "Cosine Wave Simulator",
+        "Comparison Tool",
+        "Practice Problems",
+      ],
       quiz: [
         {
-          question: 'What is cos(0°)?',
-          options: ['0', '1', '-1', '0.5'],
-          correct: 1
-        }
+          question: "What is cos(0°)?",
+          options: ["0", "1", "-1", "0.5"],
+          correct: 1,
+        },
       ],
       isUnlocked: false,
       isCompleted: false,
       position: { x: 3, y: 1 },
-      color: 'from-purple-400 to-pink-500',
-      icon: Sparkles
+      color: "from-purple-400 to-pink-500",
+      icon: Sparkles,
     },
     {
-      id: '4',
-      title: 'Tangent Function',
-      description: 'Understanding tangent and its applications',
-      lessons: ['Definition of Tangent', 'Tangent Properties', 'Tangent in Problem Solving'],
-      materials: ['Tangent Visualizer', 'Slope Calculator', 'Real-world Examples'],
+      id: "4",
+      title: "Tangent Function",
+      description: "Understanding tangent and its applications",
+      lessons: [
+        "Definition of Tangent",
+        "Tangent Properties",
+        "Tangent in Problem Solving",
+      ],
+      materials: [
+        "Tangent Visualizer",
+        "Slope Calculator",
+        "Real-world Examples",
+      ],
       quiz: [
         {
-          question: 'What is tan(45°)?',
-          options: ['0', '1', '-1', '√3'],
-          correct: 1
-        }
+          question: "What is tan(45°)?",
+          options: ["0", "1", "-1", "√3"],
+          correct: 1,
+        },
       ],
       isUnlocked: false,
       isCompleted: false,
       position: { x: 2, y: 2 },
-      color: 'from-orange-400 to-red-500',
-      icon: Star
+      color: "from-orange-400 to-red-500",
+      icon: Star,
     },
     {
-      id: '5',
-      title: 'Trig Identities',
-      description: 'Master fundamental trigonometric identities',
-      lessons: ['Pythagorean Identity', 'Sum and Difference Formulas', 'Double Angle Formulas'],
-      materials: ['Identity Proof Tool', 'Formula Reference', 'Practice Generator'],
+      id: "5",
+      title: "Trig Identities",
+      description: "Master fundamental trigonometric identities",
+      lessons: [
+        "Pythagorean Identity",
+        "Sum and Difference Formulas",
+        "Double Angle Formulas",
+      ],
+      materials: [
+        "Identity Proof Tool",
+        "Formula Reference",
+        "Practice Generator",
+      ],
       quiz: [
         {
-          question: 'What is sin²θ + cos²θ equal to?',
-          options: ['0', '1', 'tan²θ', '2'],
-          correct: 1
-        }
+          question: "What is sin²θ + cos²θ equal to?",
+          options: ["0", "1", "tan²θ", "2"],
+          correct: 1,
+        },
       ],
       isUnlocked: false,
       isCompleted: false,
       position: { x: 1, y: 3 },
-      color: 'from-indigo-400 to-purple-500',
-      icon: Trophy
+      color: "from-indigo-400 to-purple-500",
+      icon: Trophy,
     },
     {
-      id: '6',
-      title: 'Applications',
-      description: 'Real-world applications of trigonometry',
-      lessons: ['Physics Applications', 'Engineering Uses', 'Navigation and GPS'],
-      materials: ['Simulation Tools', 'Case Studies', 'Project Ideas'],
+      id: "6",
+      title: "Applications",
+      description: "Real-world applications of trigonometry",
+      lessons: [
+        "Physics Applications",
+        "Engineering Uses",
+        "Navigation and GPS",
+      ],
+      materials: ["Simulation Tools", "Case Studies", "Project Ideas"],
       quiz: [
         {
-          question: 'Trigonometry is used in which field?',
-          options: ['Physics', 'Engineering', 'Navigation', 'All of the above'],
-          correct: 3
-        }
+          question: "Trigonometry is used in which field?",
+          options: ["Physics", "Engineering", "Navigation", "All of the above"],
+          correct: 3,
+        },
       ],
       isUnlocked: false,
       isCompleted: false,
       position: { x: 3, y: 3 },
-      color: 'from-yellow-400 to-orange-500',
-      icon: Brain
-    }
+      color: "from-yellow-400 to-orange-500",
+      icon: Brain,
+    },
   ];
-
-
 
   const handleStageClick = (stage: RoadmapStage) => {
     if (stage.isUnlocked) {
@@ -294,26 +345,28 @@ export default function DashboardPage() {
 
   const handleFinalQuizClick = () => {
     // Check if all stages are completed
-    const allCompleted = roadmapStages.every(stage => stage.isCompleted);
+    const allCompleted = roadmapStages.every((stage) => stage.isCompleted);
     if (allCompleted) {
       setFinalQuiz(mockFinalQuiz);
       setShowFinalQuiz(true);
     } else {
-      alert('Complete all stages before taking the final quiz!');
+      alert("Complete all stages before taking the final quiz!");
     }
   };
 
   const handleStageComplete = (stageId: string) => {
-    setRoadmapStages(prev => prev.map(stage => {
-      if (stage.id === stageId) {
-        return { ...stage, isCompleted: true };
-      }
-      // Unlock next stage
-      if (stage.id === String(parseInt(stageId) + 1)) {
-        return { ...stage, isUnlocked: true };
-      }
-      return stage;
-    }));
+    setRoadmapStages((prev) =>
+      prev.map((stage) => {
+        if (stage.id === stageId) {
+          return { ...stage, isCompleted: true };
+        }
+        // Unlock next stage
+        if (stage.id === String(parseInt(stageId) + 1)) {
+          return { ...stage, isUnlocked: true };
+        }
+        return stage;
+      })
+    );
     setSelectedStage(null);
 
     // Show success message
@@ -398,13 +451,19 @@ export default function DashboardPage() {
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12"
-                  animate={{ x: ['-100%', '300%'] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  animate={{ x: ["-100%", "300%"] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 />
               </motion.div>
             </div>
             <div className="text-center mt-4">
-              <span className="text-4xl font-bold text-white">{generationProgress}%</span>
+              <span className="text-4xl font-bold text-white">
+                {generationProgress}%
+              </span>
             </div>
           </motion.div>
 
@@ -416,7 +475,10 @@ export default function DashboardPage() {
             <div className="inline-flex items-center gap-6 px-8 py-6 rounded-2xl backdrop-blur-sm border border-white/10 bg-gradient-to-r from-purple-500/20 to-blue-500/20">
               <motion.div
                 animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-                transition={{ rotate: { duration: 3, repeat: Infinity, ease: "linear" }, scale: { duration: 1, repeat: Infinity } }}
+                transition={{
+                  rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 1, repeat: Infinity },
+                }}
                 className="text-purple-400"
               >
                 <Sparkles size={32} />
@@ -467,8 +529,6 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
-
-
     </div>
   );
 }

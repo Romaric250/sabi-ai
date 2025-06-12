@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User } from 'lucide-react';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Mail, Lock, User } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,49 +13,45 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
+    let response;
 
     try {
-      const endpoint = isSignUp ? '/api/temp-auth/sign-up' : '/api/temp-auth/sign-in';
-      const body = isSignUp ? { email, password, name } : { email, password };
+      if (isSignUp) {
+        response = await authClient.signUp.email({
+          email,
+          password,
+          name,
+        });
+      } else {
+        response = await authClient.signIn.email({
+          email,
+          password,
+        });
+      }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Authentication failed');
+      if (response.error) {
+        setError(response.error.message || "Authentication failed");
         return;
       }
 
       onSuccess();
       onClose();
-
-      // Refresh the page to update session state
-      window.location.reload();
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
-
-
 
   if (!isOpen) return null;
 
@@ -78,7 +75,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">
-                {isSignUp ? 'Create Account' : 'Welcome Back'}
+                {isSignUp ? "Create Account" : "Welcome Back"}
               </h2>
               <button
                 onClick={onClose}
@@ -88,10 +85,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               </button>
             </div>
             <p className="text-gray-600 mt-2">
-              {isSignUp 
-                ? 'Sign up to save your learning progress' 
-                : 'Sign in to continue your learning journey'
-              }
+              {isSignUp
+                ? "Sign up to save your learning progress"
+                : "Sign in to continue your learning journey"}
             </p>
           </div>
 
@@ -110,12 +106,15 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                     Full Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <User
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-black placeholder:text-black"
                       placeholder="Enter your full name"
                       required
                     />
@@ -128,12 +127,15 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Mail
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-black placeholder:text-black"
                     placeholder="Enter your email"
                     required
                   />
@@ -145,12 +147,15 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-black placeholder:text-black"
                     placeholder="Enter your password"
                     required
                     minLength={6}
@@ -163,7 +168,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
+                {isLoading
+                  ? "Please wait..."
+                  : isSignUp
+                  ? "Create Account"
+                  : "Sign In"}
               </button>
             </form>
 
@@ -173,10 +182,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                {isSignUp 
-                  ? 'Already have an account? Sign in' 
-                  : "Don't have an account? Sign up"
-                }
+                {isSignUp
+                  ? "Already have an account? Sign in"
+                  : "Don't have an account? Sign up"}
               </button>
             </div>
           </div>

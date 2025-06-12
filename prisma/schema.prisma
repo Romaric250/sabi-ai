@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
-  sessions  Session[]
-  roadmaps  UserRoadmap[]
+  sessions Session[]
+  accounts Account[]
+  roadmaps UserRoadmap[]
 
   @@map("users")
 }
@@ -30,7 +29,10 @@ model Session {
   userId    String
   token     String   @unique
   expiresAt DateTime
+  ipAddress String?
+  userAgent String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -38,13 +40,45 @@ model Session {
   @@map("sessions")
 }
 
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verifications")
+}
+
 model Roadmap {
-  id          String   @id @default(cuid())
-  prompt      String   @unique
-  promptHash  String   @unique
-  content     Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  prompt     String   @unique
+  promptHash String   @unique
+  content    Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
   userRoadmaps UserRoadmap[]
@@ -53,18 +87,18 @@ model Roadmap {
 }
 
 model UserRoadmap {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
   roadmapId       String
-  progress        Json?    // Store detailed progress data
-  currentStage    Int      @default(1)
-  completedStages Int[]    @default([])
-  quizScores      Json?    // Store quiz scores for each stage
-  chatHistory     Json?    // Store chat interactions
-  isCompleted     Boolean  @default(false)
+  progress        Json?
+  currentStage    Int       @default(1)
+  completedStages Int[]     @default([])
+  quizScores      Json?
+  chatHistory     Json?
+  isCompleted     Boolean   @default(false)
   completedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   // Relations
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
