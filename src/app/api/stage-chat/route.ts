@@ -1,39 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: NextRequest) {
-  try {
-    const { message, stageId, stageTitle, stageDescription, lessons, context } = await request.json();
-    
-    if (!message) {
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 }
-      );
-    }
+  const { message, stageId, stageTitle, stageDescription, lessons, context } =
+    await request.json();
 
-    // Check if API key exists
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({
-        response: "I'm here to help with your learning! However, the AI service is currently unavailable. Please try again later.",
-        fallback: true
-      });
-    }
+  if (!message) {
+    return NextResponse.json({ error: "Message is required" }, { status: 400 });
+  }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  // Check if API key exists
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json({
+      response:
+        "I'm here to help with your learning! However, the AI service is currently unavailable. Please try again later.",
+      fallback: true,
+    });
+  }
 
-    // Create a highly specific context prompt for the stage
-    const stageContextPrompt = `
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  // Create a highly specific context prompt for the stage
+  const stageContextPrompt = `
 You are an expert AI tutor specializing in "${stageTitle}" (Stage ${stageId}).
 
 STAGE CONTEXT:
 - Stage Title: ${stageTitle}
 - Stage Description: ${stageDescription}
-- Learning Objectives: ${lessons ? lessons.join(', ') : 'Not specified'}
-- Overall Subject: ${context || 'General learning'}
+- Learning Objectives: ${lessons ? lessons.join(", ") : "Not specified"}
+- Overall Subject: ${context || "General learning"}
 
 STRICT INSTRUCTIONS:
 1. ONLY discuss topics related to "${stageTitle}" and its learning objectives
@@ -50,66 +48,50 @@ STUDENT QUESTION: "${message}"
 Provide a helpful, educational response that addresses their question while staying strictly within the "${stageTitle}" learning context. If the question is off-topic, gently redirect them back to the current stage material.
 `;
 
-    console.log('Sending stage-specific chat request to Gemini AI...');
-    
-    const result = await model.generateContent(stageContextPrompt);
-    const response = result.response;
-    const text = response.text();
-    
-    console.log('AI Stage Chat Response:', text);
+  console.log("Sending stage-specific chat request to Gemini AI...");
 
-    return NextResponse.json({
-      response: text.trim(),
-      stageContext: {
-        stageId,
-        stageTitle,
-        stageDescription,
-        lessons
-      },
-      timestamp: new Date().toISOString()
-    });
+  const result = await model.generateContent(stageContextPrompt);
+  const response = result.response;
+  const text = response.text();
 
-  } catch (error) {
-    console.error('Stage chat error:', error);
-    
-    // Fallback responses specific to learning stages
-    const fallbackResponses = [
-      `I'm here to help you understand ${stageTitle || 'this topic'}! Could you rephrase your question?`,
-      `Let's focus on the key concepts of ${stageTitle || 'this stage'}. What specific part would you like me to explain?`,
-      `Great question about ${stageTitle || 'this topic'}! Let me break this down for you step by step.`,
-      `I'm having trouble connecting right now, but I'd love to help you master ${stageTitle || 'this stage'}. Please try asking again!`
-    ];
-    
-    const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-    
-    return NextResponse.json({
-      response: randomResponse,
-      fallback: true,
-      error: 'AI service temporarily unavailable'
-    });
-  }
+  console.log("AI Stage Chat Response:", text);
+
+  return NextResponse.json({
+    response: text.trim(),
+    stageContext: {
+      stageId,
+      stageTitle,
+      stageDescription,
+      lessons,
+    },
+    timestamp: new Date().toISOString(),
+  });
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Stage-specific AI Chat API is running',
-    endpoint: '/api/stage-chat',
-    method: 'POST',
+    message: "Stage-specific AI Chat API is running",
+    endpoint: "/api/stage-chat",
+    method: "POST",
     expectedBody: {
-      message: 'Student question or message',
-      stageId: 'Current stage ID',
-      stageTitle: 'Current stage title',
-      stageDescription: 'Stage description',
-      lessons: ['Array of learning objectives'],
-      context: 'Overall learning topic'
+      message: "Student question or message",
+      stageId: "Current stage ID",
+      stageTitle: "Current stage title",
+      stageDescription: "Stage description",
+      lessons: ["Array of learning objectives"],
+      context: "Overall learning topic",
     },
     example: {
-      message: 'Can you explain the unit circle?',
-      stageId: '1',
-      stageTitle: 'Basic Angles',
-      stageDescription: 'Understanding degrees, radians, and angle measurement',
-      lessons: ['What are angles?', 'Degrees vs Radians', 'Unit Circle Introduction'],
-      context: 'Trigonometry'
-    }
+      message: "Can you explain the unit circle?",
+      stageId: "1",
+      stageTitle: "Basic Angles",
+      stageDescription: "Understanding degrees, radians, and angle measurement",
+      lessons: [
+        "What are angles?",
+        "Degrees vs Radians",
+        "Unit Circle Introduction",
+      ],
+      context: "Trigonometry",
+    },
   });
 }

@@ -1,20 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { TempAuth } from '@/lib/temp-auth';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
     const { roadmapId } = await request.json();
-    
+
     // Get user from session
-    const token = request.cookies.get('session-token')?.value;
+    const token = request.cookies.get("session-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const sessionData = await TempAuth.getSession(token);
+    const sessionData = await auth.api.getSession({
+      headers: request.headers,
+    });
     if (!sessionData) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const userId = sessionData.user.id;
@@ -24,12 +26,12 @@ export async function POST(request: NextRequest) {
       where: {
         userId_roadmapId: {
           userId,
-          roadmapId
-        }
+          roadmapId,
+        },
       },
       include: {
-        roadmap: true
-      }
+        roadmap: true,
+      },
     });
 
     // If doesn't exist, create it
@@ -42,23 +44,23 @@ export async function POST(request: NextRequest) {
           completedStages: [],
           progress: {
             startedAt: new Date().toISOString(),
-            totalStages: 0
-          }
+            totalStages: 0,
+          },
         },
         include: {
-          roadmap: true
-        }
+          roadmap: true,
+        },
       });
     }
 
     return NextResponse.json({
       userRoadmap,
-      roadmap: userRoadmap.roadmap
+      roadmap: userRoadmap.roadmap,
     });
   } catch (error) {
-    console.error('Error creating/getting user roadmap:', error);
+    console.error("Error creating/getting user roadmap:", error);
     return NextResponse.json(
-      { error: 'Failed to process user roadmap' },
+      { error: "Failed to process user roadmap" },
       { status: 500 }
     );
   }
@@ -67,14 +69,16 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Get user from session
-    const token = request.cookies.get('session-token')?.value;
+    const token = request.cookies.get("session-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const sessionData = await TempAuth.getSession(token);
+    const sessionData = await auth.api.getSession({
+      headers: request.headers,
+    });
     if (!sessionData) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const userId = sessionData.user.id;
@@ -83,18 +87,18 @@ export async function GET(request: NextRequest) {
     const userRoadmaps = await prisma.userRoadmap.findMany({
       where: { userId },
       include: {
-        roadmap: true
+        roadmap: true,
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
+        updatedAt: "desc",
+      },
     });
 
     return NextResponse.json(userRoadmaps);
   } catch (error) {
-    console.error('Error fetching user roadmaps:', error);
+    console.error("Error fetching user roadmaps:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch user roadmaps' },
+      { error: "Failed to fetch user roadmaps" },
       { status: 500 }
     );
   }

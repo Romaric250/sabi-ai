@@ -1,61 +1,67 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { Users, BookOpen, Trophy, Zap, Target, Brain } from 'lucide-react';
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Users, BookOpen, Trophy, Zap, Target, Brain } from "lucide-react";
 
 const stats = [
   {
     icon: Users,
     value: 50000,
-    suffix: '+',
-    label: 'Active Learners',
-    description: 'Students worldwide using our platform',
-    color: 'from-blue-500 to-cyan-500'
+    suffix: "+",
+    label: "Active Learners",
+    description: "Students worldwide using our platform",
+    color: "from-blue-500 to-cyan-500",
   },
   {
     icon: BookOpen,
     value: 10000,
-    suffix: '+',
-    label: 'Roadmaps Created',
-    description: 'AI-generated learning paths',
-    color: 'from-purple-500 to-pink-500'
+    suffix: "+",
+    label: "Roadmaps Created",
+    description: "AI-generated learning paths",
+    color: "from-purple-500 to-pink-500",
   },
   {
     icon: Trophy,
     value: 95,
-    suffix: '%',
-    label: 'Success Rate',
-    description: 'Students completing their goals',
-    color: 'from-green-500 to-emerald-500'
+    suffix: "%",
+    label: "Success Rate",
+    description: "Students completing their goals",
+    color: "from-green-500 to-emerald-500",
   },
   {
     icon: Zap,
     value: 24,
-    suffix: '/7',
-    label: 'AI Support',
-    description: 'Always available assistance',
-    color: 'from-yellow-500 to-orange-500'
+    suffix: "/7",
+    label: "AI Support",
+    description: "Always available assistance",
+    color: "from-yellow-500 to-orange-500",
   },
   {
     icon: Target,
     value: 89,
-    suffix: '%',
-    label: 'Goal Achievement',
-    description: 'Learners reaching milestones',
-    color: 'from-red-500 to-pink-500'
+    suffix: "%",
+    label: "Goal Achievement",
+    description: "Learners reaching milestones",
+    color: "from-red-500 to-pink-500",
   },
   {
     icon: Brain,
     value: 1000,
-    suffix: '+',
-    label: 'Skills Covered',
-    description: 'Different topics available',
-    color: 'from-indigo-500 to-purple-500'
-  }
+    suffix: "+",
+    label: "Skills Covered",
+    description: "Different topics available",
+    color: "from-indigo-500 to-purple-500",
+  },
 ];
 
-function CountUpAnimation({ value, duration = 2000 }: { value: number; duration?: number }) {
+function CountUpAnimation({
+  value,
+  duration = 2000,
+}: {
+  value: number;
+  duration?: number;
+}) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -65,16 +71,16 @@ function CountUpAnimation({ value, duration = 2000 }: { value: number; duration?
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
-      
+
       setCount(Math.floor(progress * value));
-      
+
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
       }
     };
 
     animationFrame = requestAnimationFrame(animate);
-    
+
     return () => cancelAnimationFrame(animationFrame);
   }, [value, duration]);
 
@@ -127,7 +133,8 @@ export function StatsSection() {
             Trusted by Thousands
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Join a global community of learners achieving their goals with AI-powered education
+            Join a global community of learners achieving their goals with
+            AI-powered education
           </p>
         </motion.div>
 
@@ -154,7 +161,7 @@ export function StatsSection() {
                 <motion.div
                   className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300`}
                 />
-                
+
                 {/* Icon */}
                 <motion.div
                   className={`w-16 h-16 rounded-xl bg-gradient-to-r ${stat.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300`}
@@ -166,7 +173,7 @@ export function StatsSection() {
                 {/* Stats */}
                 <div className="mb-4">
                   <div className="text-4xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
-                    {inView ? <CountUpAnimation value={stat.value} /> : '0'}
+                    {inView ? <CountUpAnimation value={stat.value} /> : "0"}
                     <span className="text-purple-400">{stat.suffix}</span>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-200 mb-2">
@@ -187,8 +194,12 @@ export function StatsSection() {
                   <motion.div
                     className={`h-full bg-gradient-to-r ${stat.color} rounded-full`}
                     initial={{ width: 0 }}
-                    whileInView={{ width: '100%' }}
-                    transition={{ duration: 1.5, delay: index * 0.1 + 0.7, ease: "easeOut" }}
+                    whileInView={{ width: "100%" }}
+                    transition={{
+                      duration: 1.5,
+                      delay: index * 0.1 + 0.7,
+                      ease: "easeOut",
+                    }}
                   />
                 </motion.div>
               </div>
@@ -206,8 +217,10 @@ export function StatsSection() {
         >
           <div className="max-w-4xl mx-auto">
             <blockquote className="text-2xl text-gray-300 italic mb-6">
-              "This platform completely transformed how I approach learning. The AI-generated roadmaps 
-              are incredibly accurate and the interactive quizzes keep me engaged throughout the journey."
+              &quot;This platform completely transformed how I approach
+              learning. The AI-generated roadmaps are incredibly accurate and
+              the interactive quizzes keep me engaged throughout the
+              journey.&quot;
             </blockquote>
             <div className="flex items-center justify-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
@@ -215,7 +228,9 @@ export function StatsSection() {
               </div>
               <div className="text-left">
                 <div className="text-white font-semibold">Sarah Johnson</div>
-                <div className="text-gray-400 text-sm">Full-Stack Developer</div>
+                <div className="text-gray-400 text-sm">
+                  Full-Stack Developer
+                </div>
               </div>
             </div>
           </div>

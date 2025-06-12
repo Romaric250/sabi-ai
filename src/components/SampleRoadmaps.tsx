@@ -30,10 +30,6 @@ export function SampleRoadmaps({ onSelectRoadmap }: SampleRoadmapsProps) {
   const { data } = useTempSession();
   const isAuthenticated = !!data?.user;
 
-  useEffect(() => {
-    fetchSampleRoadmaps();
-  }, []);
-
   const fetchSampleRoadmaps = async () => {
     try {
       const response = await fetch("/api/sample-roadmaps");
@@ -51,6 +47,10 @@ export function SampleRoadmaps({ onSelectRoadmap }: SampleRoadmapsProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSampleRoadmaps();
+  }, [fetchSampleRoadmaps]);
 
   // Static fallback data
   const staticSampleRoadmaps: SampleRoadmap[] = [
@@ -253,8 +253,8 @@ export function SampleRoadmaps({ onSelectRoadmap }: SampleRoadmapsProps) {
           className="text-center mt-16"
         >
           <p className="text-gray-600 mb-6">
-            Can't find what you're looking for? Create a custom roadmap for any
-            topic!
+            &quot;Can&apos;t find what you&apos;re looking for? Create a custom
+            roadmap for any topic!&quot;
           </p>
           <div className="flex items-center justify-center gap-2 text-yellow-500">
             <Star size={20} fill="currentColor" />

@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const roadmapId = params.id;
+    const { id: roadmapId } = await params;
 
     const roadmap = await prisma.roadmap.findUnique({
       where: { id: roadmapId },
@@ -17,24 +17,21 @@ export async function GET(
             progress: true,
             currentStage: true,
             completedStages: true,
-            isCompleted: true
-          }
-        }
-      }
+            isCompleted: true,
+          },
+        },
+      },
     });
 
     if (!roadmap) {
-      return NextResponse.json(
-        { error: 'Roadmap not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Roadmap not found" }, { status: 404 });
     }
 
     return NextResponse.json(roadmap);
   } catch (error) {
-    console.error('Error fetching roadmap:', error);
+    console.error("Error fetching roadmap:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch roadmap' },
+      { error: "Failed to fetch roadmap" },
       { status: 500 }
     );
   }

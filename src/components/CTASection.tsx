@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Rocket, Star, Zap } from 'lucide-react';
-import { GlowingButton } from './GlowingButton';
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, Rocket, Star, Zap } from "lucide-react";
+import { GlowingButton } from "./GlowingButton";
 
 export function CTASection() {
   return (
@@ -58,7 +58,7 @@ export function CTASection() {
           >
             <Sparkles size={40} />
           </motion.div>
-          
+
           <motion.div
             className="absolute -top-10 right-1/4 text-blue-400"
             animate={{
@@ -108,7 +108,7 @@ export function CTASection() {
           <div className="relative bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-3xl border border-slate-700/50 p-12 md:p-16">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-3xl blur-xl" />
-            
+
             <div className="relative z-10">
               {/* Badge */}
               <motion.div
@@ -119,7 +119,9 @@ export function CTASection() {
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full border border-purple-500/30 backdrop-blur-sm mb-8"
               >
                 <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm font-medium text-white">Limited Time Offer</span>
+                <span className="text-sm font-medium text-white">
+                  Limited Time Offer
+                </span>
               </motion.div>
 
               {/* Headline */}
@@ -145,9 +147,12 @@ export function CTASection() {
                 viewport={{ once: true }}
                 className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed"
               >
-                Join thousands of learners who've accelerated their careers with AI-powered roadmaps. 
+                Join thousands of learners who&apos;ve accelerated their careers
+                with AI-powered roadmaps.
                 <br />
-                <span className="text-purple-300">Start your journey today - completely free!</span>
+                <span className="text-purple-300">
+                  Start your journey today - completely free!
+                </span>
               </motion.p>
 
               {/* CTA Buttons */}
@@ -166,7 +171,7 @@ export function CTASection() {
                   Start Learning Now
                   <ArrowRight size={24} />
                 </GlowingButton>
-                
+
                 <button className="px-10 py-5 border-2 border-purple-500/50 text-purple-300 rounded-2xl font-bold text-xl hover:bg-purple-500/10 transition-all duration-300 flex items-center gap-4">
                   <Sparkles size={28} />
                   See Demo First
@@ -228,7 +233,14 @@ export function CTASection() {
           >
             <p className="text-gray-400 mb-6">Trusted by learners at</p>
             <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              {['Google', 'Microsoft', 'Amazon', 'Netflix', 'Apple', 'Meta'].map((company, index) => (
+              {[
+                "Google",
+                "Microsoft",
+                "Amazon",
+                "Netflix",
+                "Apple",
+                "Meta",
+              ].map((company, index) => (
                 <motion.div
                   key={company}
                   initial={{ opacity: 0, scale: 0.8 }}

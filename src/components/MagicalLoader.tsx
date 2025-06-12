@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Brain, Sparkles, Zap, Star, Target, Code } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Brain, Sparkles, Zap, Star, Target, Code } from "lucide-react";
 
 interface MagicalLoaderProps {
   prompt: string;
@@ -13,21 +13,43 @@ export function MagicalLoader({ prompt, progress }: MagicalLoaderProps) {
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
     }
   }, []);
 
   const loadingSteps = [
-    { text: "Analyzing your learning goal...", icon: Brain, color: "text-purple-400" },
-    { text: "Consulting AI knowledge base...", icon: Sparkles, color: "text-blue-400" },
-    { text: "Crafting personalized stages...", icon: Zap, color: "text-green-400" },
-    { text: "Generating interactive content...", icon: Star, color: "text-yellow-400" },
-    { text: "Optimizing difficulty curve...", icon: Target, color: "text-red-400" },
-    { text: "Finalizing your roadmap...", icon: Code, color: "text-cyan-400" }
+    {
+      text: "Analyzing your learning goal...",
+      icon: Brain,
+      color: "text-purple-400",
+    },
+    {
+      text: "Consulting AI knowledge base...",
+      icon: Sparkles,
+      color: "text-blue-400",
+    },
+    {
+      text: "Crafting personalized stages...",
+      icon: Zap,
+      color: "text-green-400",
+    },
+    {
+      text: "Generating interactive content...",
+      icon: Star,
+      color: "text-yellow-400",
+    },
+    {
+      text: "Optimizing difficulty curve...",
+      icon: Target,
+      color: "text-red-400",
+    },
+    { text: "Finalizing your roadmap...", icon: Code, color: "text-cyan-400" },
   ];
 
   const currentStep = Math.floor((progress / 100) * loadingSteps.length);
+
+  const StepIcon = loadingSteps[currentStep].icon;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
@@ -96,16 +118,16 @@ export function MagicalLoader({ prompt, progress }: MagicalLoaderProps) {
               <Brain className="w-12 h-12 text-white" />
             </div>
           </motion.div>
-          
+
           {/* Orbiting elements */}
           {loadingSteps.slice(0, 4).map((step, index) => (
             <motion.div
               key={index}
               className={`absolute w-8 h-8 ${step.color} opacity-80`}
               style={{
-                top: '50%',
-                left: '50%',
-                transformOrigin: '0 0',
+                top: "50%",
+                left: "50%",
+                transformOrigin: "0 0",
               }}
               animate={{
                 rotate: 360,
@@ -118,7 +140,7 @@ export function MagicalLoader({ prompt, progress }: MagicalLoaderProps) {
                 ease: "linear",
               }}
             >
-              <step.icon size={32} />
+              <StepIcon size={32} />
             </motion.div>
           ))}
         </motion.div>
@@ -139,7 +161,7 @@ export function MagicalLoader({ prompt, progress }: MagicalLoaderProps) {
               {/* Shimmer effect */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
-                animate={{ x: ['-100%', '200%'] }}
+                animate={{ x: ["-100%", "200%"] }}
                 transition={{
                   duration: 1.5,
                   repeat: Infinity,
@@ -168,7 +190,7 @@ export function MagicalLoader({ prompt, progress }: MagicalLoaderProps) {
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className={loadingSteps[currentStep].color}
               >
-                <loadingSteps[currentStep].icon size={24} />
+                <StepIcon size={24} />
               </motion.div>
               <span className="text-lg text-gray-300">
                 {loadingSteps[currentStep].text}
@@ -185,19 +207,20 @@ export function MagicalLoader({ prompt, progress }: MagicalLoaderProps) {
               initial={{ opacity: 0.3, scale: 0.9 }}
               animate={{
                 opacity: index <= currentStep ? 1 : 0.3,
-                scale: index === currentStep ? 1.1 : index < currentStep ? 1 : 0.9,
+                scale:
+                  index === currentStep ? 1.1 : index < currentStep ? 1 : 0.9,
               }}
               className={`p-4 rounded-xl border transition-all duration-300 ${
                 index <= currentStep
-                  ? 'bg-slate-800/50 border-purple-500/50 backdrop-blur-sm'
-                  : 'bg-slate-900/30 border-slate-700/30'
+                  ? "bg-slate-800/50 border-purple-500/50 backdrop-blur-sm"
+                  : "bg-slate-900/30 border-slate-700/30"
               }`}
             >
               <div className={`w-8 h-8 mx-auto mb-2 ${step.color}`}>
-                <step.icon size={32} />
+                <StepIcon size={32} />
               </div>
               <p className="text-xs text-gray-400 text-center">
-                {step.text.split(' ').slice(0, 2).join(' ')}...
+                {step.text.split(" ").slice(0, 2).join(" ")}...
               </p>
               {index <= currentStep && (
                 <motion.div

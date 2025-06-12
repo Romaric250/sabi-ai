@@ -76,7 +76,7 @@ export function HeroSection() {
       setCurrentExample((prev) => (prev + 1) % examples.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [examples.length]);
 
   const handleGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

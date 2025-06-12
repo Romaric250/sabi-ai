@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 
 interface Particle {
   x: number;
@@ -16,13 +16,13 @@ interface Particle {
 export function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const resizeCanvas = () => {
@@ -32,8 +32,11 @@ export function ParticleField() {
 
     const createParticles = () => {
       const particles: Particle[] = [];
-      const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 15000));
-      
+      const particleCount = Math.min(
+        100,
+        Math.floor((canvas.width * canvas.height) / 15000)
+      );
+
       for (let i = 0; i < particleCount; i++) {
         particles.push({
           x: Math.random() * canvas.width,
@@ -42,27 +45,27 @@ export function ParticleField() {
           vy: (Math.random() - 0.5) * 0.5,
           size: Math.random() * 2 + 1,
           opacity: Math.random() * 0.5 + 0.2,
-          color: Math.random() > 0.5 ? '#8b5cf6' : '#3b82f6'
+          color: Math.random() > 0.5 ? "#8b5cf6" : "#3b82f6",
         });
       }
-      
+
       particlesRef.current = particles;
     };
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       particlesRef.current.forEach((particle, index) => {
         // Update position
         particle.x += particle.vx;
         particle.y += particle.vy;
-        
+
         // Wrap around edges
         if (particle.x < 0) particle.x = canvas.width;
         if (particle.x > canvas.width) particle.x = 0;
         if (particle.y < 0) particle.y = canvas.height;
         if (particle.y > canvas.height) particle.y = 0;
-        
+
         // Draw particle
         ctx.save();
         ctx.globalAlpha = particle.opacity;
@@ -71,13 +74,13 @@ export function ParticleField() {
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-        
+
         // Draw connections
-        particlesRef.current.slice(index + 1).forEach(otherParticle => {
+        particlesRef.current.slice(index + 1).forEach((otherParticle) => {
           const dx = particle.x - otherParticle.x;
           const dy = particle.y - otherParticle.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (distance < 100) {
             ctx.save();
             ctx.globalAlpha = (1 - distance / 100) * 0.2;
@@ -91,7 +94,7 @@ export function ParticleField() {
           }
         });
       });
-      
+
       animationRef.current = requestAnimationFrame(animate);
     };
 
@@ -104,10 +107,10 @@ export function ParticleField() {
       createParticles();
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }

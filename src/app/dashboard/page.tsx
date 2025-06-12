@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import Stages from "@/components/stages";
 import { authClient } from "@/lib/auth-client";
@@ -35,7 +35,7 @@ async function generateRoadmap(prompt: string): Promise<RoadmapData> {
   return response.json();
 }
 
-export default function DashboardPage() {
+const DashboardPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } =
@@ -87,7 +87,7 @@ export default function DashboardPage() {
     if (prompt) {
       generateRoadmapMutation(prompt);
     }
-  }, [prompt]);
+  }, [prompt, generateRoadmapMutation]);
 
   const mockFinalQuiz: FinalQuiz = {
     title: "Final Assessment: Trigonometry Mastery",
@@ -408,4 +408,14 @@ export default function DashboardPage() {
       </AnimatePresence>
     </div>
   );
-}
+};
+
+const Dashboard = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardPage />
+    </Suspense>
+  );
+};
+
+export default Dashboard;
