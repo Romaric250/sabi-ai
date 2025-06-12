@@ -1,15 +1,14 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+import { HTMLMotionProps, motion } from "framer-motion";
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
-import { motion, HTMLMotionProps } from "framer-motion";
-import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
 interface SidebarContextType {
@@ -24,7 +23,7 @@ interface SidebarProviderProps {
 }
 
 const SidebarProvider = ({ children }: SidebarProviderProps) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = useCallback(() => {
     return setIsOpen((open) => !open);
@@ -73,11 +72,11 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <div className="size-5 rounded-[4px] border border-black flex items-center ">
+      <div className="size-5 rounded-[4px] border-black border-4 flex items-center ">
         <motion.div
           animate={{ width: isOpen ? 10 : 4, height: 16 }}
           transition={{ duration: 0.2 }}
-          className="bg-black ml-px rounded-[2px]"
+          className={cn("bg-black ml-px rounded-[2px]", isOpen && "ml-0")}
         />
       </div>
       <span className="sr-only">Toggle Sidebar</span>
@@ -109,4 +108,4 @@ const useSidebar = () => {
   return context;
 };
 
-export { SidebarProvider, SidebarTrigger, SidebarContent, useSidebar };
+export { SidebarContent, SidebarProvider, SidebarTrigger, useSidebar };

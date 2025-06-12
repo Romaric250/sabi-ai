@@ -1,352 +1,191 @@
 {
-  "success": true,
   "roadmap": [
     {
       "id": "1",
-      "title": "Basic Auth Concepts",
-      "description": "Understanding fundamental authentication principles.",
-      "lessons": [
-        "Introduction to Authentication",
-        "Types of Authentication",
-        "Authentication vs. Authorization"
-      ],
-      "materials": [
-        {
-          "title": "Introduction to Authentication",
-          "type": "text",
-          "content": "# Introduction to Authentication\n\n## Overview\nAuthentication is the process of verifying the identity of a user, device, or other entity.  It's a critical component of security, ensuring that only authorized individuals can access protected resources. This involves confirming that the entity claiming an identity is indeed who or what it claims to be.\n\n## Key Concepts\n- **Username/Password:** The traditional method, relying on a user providing credentials.\n- **Multi-Factor Authentication (MFA):** Enhancing security by requiring multiple forms of verification.\n- **Single Sign-On (SSO):** Allowing users to access multiple applications with a single set of credentials.\n\n## Step-by-Step Guide\n1. User requests access to a resource.\n2. The system prompts for credentials (username/password).\n3. The system verifies the credentials against a database or directory.\n4. Upon successful verification, access is granted.\n\n## Real-World Applications\nEveryday examples include logging into your email, online banking, or social media accounts.  These systems utilize authentication to ensure only authorized users can access sensitive data.\n\n## Summary\nAuthentication is the cornerstone of secure access to systems and resources.  Understanding its core principles is essential for building secure applications.",
-          "readTime": "15 min"
-        },
-        {
-          "title": "Video Tutorial",
-          "type": "video",
-          "url": "https://www.youtube.com/watch?v=Zf70fK56V_U",
-          "duration": "15 min",
-          "description": "Introduction to Authentication Concepts"
-        },
-        {
-          "title": "Visual Guide",
-          "type": "image",
-          "imageUrl": "https://picsum.photos/800/600?random=2",
-          "description": "Diagram illustrating the authentication process"
-        }
-      ],
       "quiz": [
         {
-          "question": "What is the primary goal of authentication?",
-          "options": [
-            "To encrypt data",
-            "To verify user identity",
-            "To authorize access to resources",
-            "To prevent data breaches"
-          ],
           "correct": 1,
-          "explanation": "Authentication focuses on verifying the identity of the user or entity attempting access."
+          "options": [
+            "To authorize access",
+            "To verify identity",
+            "To encrypt data",
+            "To store passwords"
+          ],
+          "question": "What is the primary purpose of authentication?",
+          "explanation": "Authentication is fundamentally about verifying the identity of a user or entity."
         },
         {
-          "question": "What is Multi-Factor Authentication (MFA)?",
-          "options": [
-            "Using a single password for all accounts",
-            "Requiring multiple forms of verification",
-            "Encrypting data using a single key",
-            "Authorizing access to resources"
-          ],
           "correct": 1,
-          "explanation": "MFA enhances security by requiring multiple verification methods, such as passwords, security tokens, and biometrics."
+          "options": ["A firewall", "A password", "Encryption", "A database"],
+          "question": "What is an example of a authentication factor?",
+          "explanation": "A password is a common example of something you know, a key authentication factor."
         }
+      ],
+      "color": "from-green-400 to-emerald-500",
+      "title": "Intro to Auth",
+      "lessons": [
+        "What is Authentication?",
+        "Authentication vs. Authorization",
+        "Types of Authentication"
       ],
       "position": {
         "x": 2,
         "y": 0
       },
-      "color": "from-green-400 to-emerald-500"
-    },
-    {
-      "id": "2",
-      "title": "Password Security",
-      "description": "Exploring password security best practices and common vulnerabilities.",
-      "lessons": ["Password Storage", "Password Cracking", "Password Policies"],
       "materials": [
         {
-          "title": "Password Security Best Practices",
           "type": "text",
-          "content": "# Password Security Best Practices\n\n## Overview\nPasswords remain a fundamental part of authentication, but their security is paramount.  Poor password practices lead to significant vulnerabilities.\n\n## Key Concepts\n- **Salting and Hashing:** Protecting passwords from direct exposure by using one-way encryption.\n- **Password Complexity:** Utilizing diverse characters, lengths, and patterns to increase security.\n- **Password Managers:** Tools that securely store and manage passwords.\n\n## Step-by-Step Guide\n1. Choose a strong password with a mix of uppercase, lowercase, numbers, and symbols.\n2. Use a unique password for each account.\n3. Enable two-factor authentication whenever possible.\n4. Regularly update passwords.\n\n## Real-World Applications\nUnderstanding password security protects users from account compromise. Strong passwords, MFA, and regular updates minimize the risk.\n\n## Summary\nStrong password practices are critical for maintaining security and preventing unauthorized access. Utilizing best practices significantly reduces risks.",
+          "title": "Introduction to Authentication",
+          "content": "# Introduction to Authentication\n\n## Overview\nAuthentication is the process of verifying the identity of a user, device, or other entity.  It's a crucial security measure used to protect sensitive data and resources from unauthorized access.  Think of it like showing your ID to get into a building – you're proving who you are.\n\n## Key Concepts\n- **User Credentials**:  Information used to verify identity, such as usernames, passwords, or biometrics.\n- **Authentication Factors**:  Methods used to verify identity, including something you know (password), something you have (phone), and something you are (fingerprint).\n- **Authentication Protocols**:  The set of rules and standards that govern the authentication process.\n\n## Step-by-Step Guide\n1. **User Input:** The user provides their credentials.\n2. **Verification:** The system checks the credentials against a database or other secure storage.\n3. **Granting Access:** If the credentials are valid, access is granted.\n\n## Real-World Applications\nWebsites, mobile apps, network access, and physical security systems all use authentication to protect their resources.  Logging into your bank account requires authentication to protect your funds.\n\n## Summary\nAuthentication is a fundamental security concept.  Understanding its different forms and how it works is key to understanding overall security.",
           "readTime": "15 min"
         },
         {
-          "title": "Video Tutorial",
+          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
           "type": "video",
-          "url": "https://www.youtube.com/watch?v=8r9_6o76X6I",
-          "duration": "12 min",
-          "description": "Password Security Best Practices"
+          "title": "Video Tutorial",
+          "duration": "10 min",
+          "description": "Basic authentication concepts explained"
         },
         {
-          "title": "Visual Guide",
           "type": "image",
-          "imageUrl": "https://picsum.photos/800/600?random=3",
-          "description": "Infographic illustrating password complexity"
+          "title": "Visual Guide",
+          "imageUrl": "https://picsum.photos/800/600?random=1",
+          "description": "Diagram showing authentication flow"
         }
       ],
-      "quiz": [
-        {
-          "question": "Why is salting and hashing important for password security?",
-          "options": [
-            "To encrypt passwords for easy retrieval",
-            "To make passwords more difficult to crack",
-            "To speed up the authentication process",
-            "To standardize password formats"
-          ],
-          "correct": 1,
-          "explanation": "Salting and hashing make it difficult to retrieve the original password even if the database is compromised."
-        },
-        {
-          "question": "What is a password manager?",
-          "options": [
-            "A tool to automatically generate weak passwords",
-            "A software that securely stores and manages passwords",
-            "A system for sharing passwords with others",
-            "A type of encryption algorithm"
-          ],
-          "correct": 1,
-          "explanation": "Password managers help users generate and securely store unique, strong passwords for various accounts."
-        }
+      "description": "Understanding the basics of authentication."
+    },
+    {
+      "id": "2",
+      "quiz": [],
+      "color": "from-blue-400 to-cyan-500",
+      "title": "Password-Based Auth",
+      "lessons": [
+        "Password Security Best Practices",
+        "Password Cracking Techniques",
+        "Password Storage and Hashing"
       ],
       "position": {
         "x": 1,
         "y": 1
       },
-      "color": "from-blue-400 to-cyan-500"
+      "materials": [],
+      "description": "Exploring password-based authentication methods."
     },
     {
       "id": "3",
-      "title": "OAuth 2.0",
-      "description": "Learning about OAuth 2.0 for secure API authentication.",
+      "quiz": [],
+      "color": "from-purple-400 to-pink-500",
+      "title": "Multi-Factor Auth",
       "lessons": [
-        "OAuth 2.0 Flow",
-        "Authorization Grants",
-        "OAuth 2.0 Security"
-      ],
-      "materials": [
-        {
-          "title": "Understanding OAuth 2.0",
-          "type": "text",
-          "content": "# Understanding OAuth 2.0\n\n## Overview\nOAuth 2.0 is an authorization framework that allows third-party applications to access user data without requiring passwords.  It emphasizes delegation and minimizes the risk of credential compromise.\n\n## Key Concepts\n- **Authorization Server:** Issues access tokens.\n- **Resource Server:** Protects the user's data.\n- **Client:** The application requesting access.\n- **Access Token:**  A temporary credential providing access to protected resources.\n\n## Step-by-Step Guide\n1. User authenticates with the authorization server.\n2. The authorization server issues an authorization code.\n3. The client exchanges the code for an access token.\n4. The client uses the access token to access resources.\n\n## Real-World Applications\nMany applications and APIs use OAuth 2.0, such as social media logins (e.g., logging into a site with your Google account) and third-party app integrations.\n\n## Summary\nOAuth 2.0 is a widely used authorization framework for protecting user data while enabling secure access for third-party applications.",
-          "readTime": "20 min"
-        },
-        {
-          "title": "Video Tutorial",
-          "type": "video",
-          "url": "https://www.youtube.com/watch?v=996O3xqjM0I",
-          "duration": "20 min",
-          "description": "OAuth 2.0 Explained"
-        },
-        {
-          "title": "Visual Guide",
-          "type": "image",
-          "imageUrl": "https://picsum.photos/800/600?random=4",
-          "description": "Diagram illustrating the OAuth 2.0 flow"
-        }
-      ],
-      "quiz": [
-        {
-          "question": "What is the role of an access token in OAuth 2.0?",
-          "options": [
-            "To store user credentials",
-            "To encrypt user data",
-            "To authorize access to protected resources",
-            "To identify the client application"
-          ],
-          "correct": 2,
-          "explanation": "The access token grants temporary authorization to the client application."
-        },
-        {
-          "question": "What is the difference between OAuth 2.0 and OpenID Connect?",
-          "options": [
-            "They are the same thing",
-            "OAuth 2.0 focuses on authorization, OpenID Connect on authentication",
-            "OAuth 2.0 is outdated, OpenID Connect is the current standard",
-            "They have no relationship"
-          ],
-          "correct": 1,
-          "explanation": "While related, OAuth 2.0 handles authorization, and OpenID Connect adds an authentication layer."
-        }
+        "Types of MFA",
+        "Implementing MFA",
+        "MFA Security Considerations"
       ],
       "position": {
         "x": 3,
         "y": 1
       },
-      "color": "from-purple-400 to-pink-500"
+      "materials": [],
+      "description": "Understanding multi-factor authentication and its benefits."
     },
     {
       "id": "4",
-      "title": "JWT (JSON Web Tokens)",
-      "description": "Understanding JSON Web Tokens for stateless authentication.",
-      "lessons": ["JWT Structure", "JWT Verification", "JWT Security"],
-      "materials": [
-        {
-          "title": "JSON Web Tokens (JWT)",
-          "type": "text",
-          "content": "# JSON Web Tokens (JWT)\n\n## Overview\nJWTs are a compact and self-contained way to transmit information between parties as a JSON object.  It's frequently used for stateless authentication, improving scalability and flexibility.\n\n## Key Concepts\n- **Header:** Contains metadata about the token (e.g., algorithm).\n- **Payload:** Contains the claims (e.g., user ID, roles).\n- **Signature:** Ensures the token's integrity.\n\n## Step-by-Step Guide\n1. The authentication server issues a JWT.\n2. The client sends the JWT with each subsequent request.\n3. The server verifies the signature and claims.\n4. Upon successful verification, access is granted.\n\n## Real-World Applications\nJWTs are widely used in microservices architecture, single page applications, and APIs where statelessness is advantageous.\n\n## Summary\nJWTs offer a secure and efficient approach for stateless authentication in various applications.",
-          "readTime": "20 min"
-        },
-        {
-          "title": "Video Tutorial",
-          "type": "video",
-          "url": "https://www.youtube.com/watch?v=s1bK-W30b0I",
-          "duration": "18 min",
-          "description": "JWT Authentication Explained"
-        },
-        {
-          "title": "Visual Guide",
-          "type": "image",
-          "imageUrl": "https://picsum.photos/800/600?random=5",
-          "description": "Diagram illustrating JWT structure"
-        }
-      ],
-      "quiz": [
-        {
-          "question": "What are the three parts of a JWT?",
-          "options": [
-            "Header, Payload, Signature",
-            "Key, Value, Algorithm",
-            "Username, Password, Token",
-            "Client, Server, User"
-          ],
-          "correct": 0,
-          "explanation": "The header contains metadata, the payload contains claims, and the signature verifies authenticity."
-        },
-        {
-          "question": "How does JWT enhance security?",
-          "options": [
-            "By encrypting the entire token",
-            "By using symmetric-key encryption",
-            "By providing a digitally signed token",
-            "By requiring database lookups for each request"
-          ],
-          "correct": 2,
-          "explanation": "The digital signature verifies that the JWT hasn't been tampered with."
-        }
+      "quiz": [],
+      "color": "from-orange-400 to-red-500",
+      "title": "OAuth 2.0",
+      "lessons": [
+        "OAuth 2.0 Flow",
+        "OAuth 2.0 Grant Types",
+        "OAuth 2.0 Security"
       ],
       "position": {
         "x": 2,
         "y": 2
       },
-      "color": "from-orange-400 to-red-500"
+      "materials": [],
+      "description": "Introduction to OAuth 2.0 and its use cases."
     },
     {
       "id": "5",
-      "title": "API Security",
-      "description": "Securing APIs using authentication and authorization mechanisms.",
-      "lessons": ["API Keys", "API Gateways", "Rate Limiting"],
-      "materials": [
-        {
-          "title": "Securing APIs",
-          "type": "text",
-          "content": "# Securing APIs\n\n## Overview\nSecuring APIs involves implementing authentication and authorization mechanisms to control access to sensitive data and functionalities.  This is critical to preventing unauthorized access and maintaining data integrity.\n\n## Key Concepts\n- **API Keys:** Unique identifiers used for authentication.\n- **API Gateways:** Centralized points for managing and securing API traffic.\n- **Rate Limiting:** Preventing abuse by limiting the number of requests.\n- **Input Validation:** Preventing injection attacks by validating all inputs.\n\n## Step-by-Step Guide\n1. Implement robust authentication using JWT or OAuth 2.0.\n2. Apply authorization rules to control access to specific resources.\n3. Use rate limiting to prevent denial-of-service attacks.\n4. Validate all inputs to prevent injection vulnerabilities.\n\n## Real-World Applications\nAlmost every modern application relies on APIs, making securing them crucial.  The appropriate security measures depend on the API and its sensitivity.\n\n## Summary\nAPI security is crucial to protecting data and functionality from unauthorized access and abuse.",
-          "readTime": "18 min"
-        },
-        {
-          "title": "Video Tutorial",
-          "type": "video",
-          "url": "https://www.youtube.com/watch?v=1i3z-zX_s8Y",
-          "duration": "15 min",
-          "description": "API Security Best Practices"
-        },
-        {
-          "title": "Visual Guide",
-          "type": "image",
-          "imageUrl": "https://picsum.photos/800/600?random=6",
-          "description": "Diagram illustrating API security architecture"
-        }
-      ],
-      "quiz": [
-        {
-          "question": "What is the purpose of an API gateway?",
-          "options": [
-            "To encrypt API traffic",
-            "To centralize API management and security",
-            "To store API keys",
-            "To generate API documentation"
-          ],
-          "correct": 1,
-          "explanation": "API gateways act as a central point for managing, securing, and routing API requests."
-        },
-        {
-          "question": "What is rate limiting?",
-          "options": [
-            "Limiting the size of API responses",
-            "Limiting the number of API requests",
-            "Limiting the types of API requests",
-            "Limiting the time to process API requests"
-          ],
-          "correct": 1,
-          "explanation": "Rate limiting helps protect against denial-of-service attacks by controlling request frequency."
-        }
+      "quiz": [],
+      "color": "from-indigo-400 to-purple-500",
+      "title": "OpenID Connect",
+      "lessons": [
+        "OpenID Connect Flow",
+        "OpenID Connect Claims",
+        "OpenID Connect Security"
       ],
       "position": {
         "x": 1,
         "y": 3
       },
-      "color": "from-indigo-400 to-purple-500"
+      "materials": [],
+      "description": "Understanding OpenID Connect and its relationship to OAuth 2.0."
     },
     {
       "id": "6",
-      "title": "Advanced Auth",
-      "description": "Exploring advanced authentication techniques and best practices.",
-      "lessons": ["Biometric Auth", "SSO Implementations", "Security Audits"],
-      "materials": [
-        {
-          "title": "Advanced Authentication Techniques",
-          "type": "text",
-          "content": "# Advanced Authentication Techniques\n\n## Overview\nAdvanced authentication methods go beyond traditional username/password combinations, utilizing more sophisticated techniques for enhanced security and user experience.\n\n## Key Concepts\n- **Biometric Authentication:** Using physical characteristics (fingerprints, facial recognition) for verification.\n- **SSO Implementations:**  Implementing single sign-on across multiple applications and services.\n- **Security Audits:** Regular security assessments to identify vulnerabilities and improve security posture.\n\n## Step-by-Step Guide\n1. Choose appropriate authentication methods based on security requirements.\n2. Implement robust security measures to protect credentials and user data.\n3. Conduct regular security audits to identify and address potential vulnerabilities.\n4. Maintain up-to-date security policies and procedures.\n\n## Real-World Applications\nMany modern systems utilize biometric authentication for enhanced security.  Organizations utilize SSO for seamless access to multiple systems.\n\n## Summary\nAdvanced authentication techniques are crucial for enhanced security and improved user experience in modern systems.",
-          "readTime": "20 min"
-        },
-        {
-          "title": "Video Tutorial",
-          "type": "video",
-          "url": "https://www.youtube.com/watch?v=65zT_oZ1h9Q",
-          "duration": "20 min",
-          "description": "Advanced Authentication Methods"
-        },
-        {
-          "title": "Visual Guide",
-          "type": "image",
-          "imageUrl": "https://picsum.photos/800/600?random=7",
-          "description": "Diagram showing advanced authentication flow"
-        }
-      ],
-      "quiz": [
-        {
-          "question": "What are some advantages of biometric authentication?",
-          "options": [
-            "Enhanced security",
-            "Improved user experience",
-            "Reduced reliance on passwords",
-            "All of the above"
-          ],
-          "correct": 3,
-          "explanation": "Biometric authentication provides stronger security and a more user-friendly approach."
-        },
-        {
-          "question": "Why are security audits important?",
-          "options": [
-            "To identify and address security vulnerabilities",
-            "To comply with regulatory requirements",
-            "To improve overall security posture",
-            "All of the above"
-          ],
-          "correct": 3,
-          "explanation": "Regular security audits are essential for maintaining a strong security posture."
-        }
+      "quiz": [],
+      "color": "from-yellow-400 to-orange-500",
+      "title": "Biometric Auth",
+      "lessons": [
+        "Types of Biometrics",
+        "Biometric Security",
+        "Biometric Vulnerabilities"
       ],
       "position": {
         "x": 3,
         "y": 3
       },
-      "color": "from-yellow-400 to-orange-500"
+      "materials": [],
+      "description": "Exploring biometric authentication methods and security concerns."
+    },
+    {
+      "id": "7",
+      "quiz": [],
+      "color": "from-green-400 to-emerald-500",
+      "title": "API Keys",
+      "lessons": [
+        "API Key Best Practices",
+        "API Key Management",
+        "API Key Security Risks"
+      ],
+      "position": {
+        "x": 2,
+        "y": 4
+      },
+      "materials": [],
+      "description": "Understanding API keys and their role in authentication."
+    },
+    {
+      "id": "8",
+      "quiz": [],
+      "color": "from-blue-400 to-cyan-500",
+      "title": "JWT",
+      "lessons": ["JWT Structure", "JWT Usage", "JWT Security"],
+      "position": {
+        "x": 1,
+        "y": 5
+      },
+      "materials": [],
+      "description": "Introduction to JSON Web Tokens (JWT) and their uses."
+    },
+    {
+      "id": "9",
+      "quiz": [],
+      "color": "from-purple-400 to-pink-500",
+      "title": "SAML",
+      "lessons": ["SAML Concepts", "SAML Protocols", "SAML Use Cases"],
+      "position": {
+        "x": 3,
+        "y": 5
+      },
+      "materials": [],
+      "description": "Understanding Security Assertion Markup Language (SAML)."
     }
   ],
-  "prompt": "authentication",
-  "cached": false,
-  "message": "Generated new roadmap"
+  "cached": true,
+  "similarity": 1,
+  "originalPrompt": "what is authentication",
+  "message": "Retrieved from cache (100% similar to \"what is authentication\")"
 }

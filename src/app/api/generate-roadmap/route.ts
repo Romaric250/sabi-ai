@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { findSimilarRoadmap, storeRoadmap } from "@/lib/vector-db";
+import { findSimilarRoadmaps, storeRoadmap } from "@/lib/vector-db";
 import { auth } from "@/lib/auth";
 
 interface RoadmapStage {
@@ -91,7 +91,7 @@ Create a roadmap with exactly this JSON structure:
 }
 
 Requirements:
-1. Create exactly 6 stages that build upon each other
+1. Create min 6 and maximum 10 stages that build upon each other
 2. Each stage should have 3 lessons, rich materials with actual content, and 2 quiz questions with explanations
 3. Position stages in a path: stage 1 at (2,0), stage 2 at (1,1), stage 3 at (3,1), stage 4 at (2,2), stage 5 at (1,3), stage 6 at (3,3)
 4. Use these colors in order: "from-green-400 to-emerald-500", "from-blue-400 to-cyan-500", "from-purple-400 to-pink-500", "from-orange-400 to-red-500", "from-indigo-400 to-purple-500", "from-yellow-400 to-orange-500"
@@ -361,32 +361,38 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Searching for similar roadmap for prompt:", prompt);
-    const existingRoadmap = await findSimilarRoadmap(prompt);
+    const similarRoadmaps = await findSimilarRoadmaps(prompt);
 
-    if (existingRoadmap) {
-      console.log("Found similar roadmap, returning cached result");
-      return NextResponse.json({
-        roadmap: existingRoadmap.content,
-        cached: true,
-        similarity: existingRoadmap.similarity,
-        originalPrompt: existingRoadmap.prompt,
-        message: `Retrieved from cache (${Math.round(
-          existingRoadmap.similarity * 100
-        )}% similar to "${existingRoadmap.prompt}")`,
-      });
+    if (similarRoadmaps.length > 0) {
+      const bestMatch = similarRoadmaps[0];
+
+      // Only use cached result if similarity is 0.8 or higher
+      if (bestMatch.similarity >= 0.8) {
+        console.log("Found similar roadmap, returning cached result");
+        return NextResponse.json({
+          roadmap: bestMatch.content,
+          cached: true,
+          similarity: bestMatch.similarity,
+          originalPrompt: bestMatch.prompt,
+          message: `Retrieved from cache (${Math.round(
+            bestMatch.similarity * 100
+          )}% similar to "${bestMatch.prompt}")`,
+        });
+      }
+      console.log(
+        "Similar roadmap found but below threshold, generating new one"
+      );
     }
 
     // Generate roadmap using Gemini AI
     console.log("Generating new roadmap with AI for prompt:", prompt);
     const roadmap = await generateRoadmapWithAI(prompt);
 
-    // Store the new roadmap in the vector database for future use
     try {
       await storeRoadmap(prompt, roadmap);
       console.log("Successfully stored roadmap in vector database");
     } catch (storeError) {
       console.error("Failed to store roadmap in vector database:", storeError);
-      // Continue anyway, don't fail the request
     }
 
     return NextResponse.json({

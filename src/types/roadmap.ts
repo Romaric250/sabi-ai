@@ -1,6 +1,6 @@
 export interface StudyMaterial {
   title: string;
-  type: 'text' | 'video' | 'image';
+  type: "text" | "video" | "image";
   content?: string;
   url?: string;
   imageUrl?: string;
@@ -39,6 +39,9 @@ export interface FinalQuiz {
 }
 
 export interface RoadmapData {
-  stages: RoadmapStage[];
-  finalQuiz?: FinalQuiz;
+  roadmap: RoadmapStage[];
+  cached?: boolean;
+  similarity?: number;
+  originalPrompt?: string;
+  message?: string;
 }

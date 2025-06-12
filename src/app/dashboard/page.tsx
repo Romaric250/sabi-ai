@@ -2,6 +2,7 @@
 
 import { FinalQuizModal } from "@/components/FinalQuizModal";
 import { StageSheet } from "@/components/StageSheet";
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Brain, Sparkles, Star, Trophy, Zap } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,102 +10,77 @@ import { useEffect, useState } from "react";
 
 import Stages from "@/components/stages";
 import { authClient } from "@/lib/auth-client";
-import { FinalQuiz, RoadmapStage } from "@/types/roadmap";
+import { FinalQuiz, RoadmapStage, RoadmapData } from "@/types/roadmap";
 
-// Remove local interface since we're importing from types
+// API functions
+async function generateRoadmap(prompt: string): Promise<RoadmapData> {
+  const response = await fetch("/api/generate-roadmap", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data, isPending } = authClient.useSession();
+  const { data: session, isPending: isSessionLoading } =
+    authClient.useSession();
   const prompt = searchParams.get("prompt");
   const roadmapId = searchParams.get("roadmapId");
 
-  const [isGenerating, setIsGenerating] = useState(true);
-  const [generationProgress, setGenerationProgress] = useState(0);
-  const [roadmapStages, setRoadmapStages] = useState<RoadmapStage[]>([]);
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
   const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
+  const [roadmapStages, setRoadmapStages] = useState<RoadmapStage[]>([]);
 
-  useEffect(() => {
-    const generateRoadmap = async () => {
-      setIsGenerating(true);
-      setGenerationProgress(0);
+  // TanStack Query mutation for roadmap generation
+  const {
+    mutate: generateRoadmapMutation,
+    isPending: isGenerating,
+    data: roadmapData,
+    error: generationError,
+    status: generationStatus,
+  } = useMutation({
+    mutationFn: (prompt: string) => generateRoadmap(prompt),
+    onSuccess: (data: RoadmapData) => {
+      if (data.roadmap) {
+        const stages = data.roadmap;
 
-      try {
-        // Simulate progress during AI generation
-        const progressInterval = setInterval(() => {
-          setGenerationProgress((prev) => {
-            if (prev >= 90) return prev;
-            return prev + Math.random() * 10;
-          });
-        }, 200);
+        const transformedRoadmap = stages.map(
+          (stage: RoadmapStage, index: number) => ({
+            ...stage,
+            isUnlocked: index === 0, // Only first stage is unlocked
+            isCompleted: false,
+            icon:
+              [Zap, Brain, Sparkles, Star, Trophy, Brain][index % 6] || Brain, // Use modulo to handle more than 6 stages
+          })
+        );
 
-        console.log("Generating roadmap for:", prompt);
-
-        // Call the real AI API
-        const response = await fetch("/api/generate-roadmap", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ prompt }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("AI Response:", data);
-
-        clearInterval(progressInterval);
-        setGenerationProgress(100);
-
-        if (data.success && data.roadmap) {
-          // Handle both old array format and new object format
-          const stages = Array.isArray(data.roadmap)
-            ? data.roadmap
-            : data.roadmap.stages;
-          const finalQuizData = data.roadmap.finalQuiz;
-
-          // Transform AI roadmap to match our interface
-          const transformedRoadmap = stages.map(
-            (stage: any, index: number) => ({
-              ...stage,
-              isUnlocked: index === 0, // Only first stage is unlocked
-              isCompleted: false,
-              icon: [Zap, Brain, Sparkles, Star, Trophy, Brain][index] || Brain,
-            })
-          );
-
-          setTimeout(() => {
-            setRoadmapStages(transformedRoadmap);
-            if (finalQuizData) {
-              setFinalQuiz(finalQuizData);
-            }
-            setIsGenerating(false);
-          }, 1000);
-        } else {
-          throw new Error("Failed to generate roadmap");
-        }
-      } catch (error) {
-        console.error("Error generating roadmap:", error);
-
-        // Fallback to mock data on error
-        setTimeout(() => {
-          setRoadmapStages(mockTrigonometryRoadmap);
-          setFinalQuiz(mockFinalQuiz);
-          setIsGenerating(false);
-        }, 1000);
+        setRoadmapStages(transformedRoadmap);
       }
-    };
+    },
+    onError: (error: any) => {
+      console.error("Error generating roadmap:", error);
+      // Fallback to mock data on error
+      setRoadmapStages(mockTrigonometryRoadmap);
+      setFinalQuiz(mockFinalQuiz);
+    },
+  });
 
-    generateRoadmap();
+  // Start roadmap generation when prompt is available
+  useEffect(() => {
+    if (prompt) {
+      generateRoadmapMutation(prompt);
+    }
   }, [prompt]);
 
-  // Mock final quiz
   const mockFinalQuiz: FinalQuiz = {
     title: "Final Assessment: Trigonometry Mastery",
     description: "Comprehensive test covering all trigonometry concepts",
@@ -158,7 +134,6 @@ export default function DashboardPage() {
     timeLimit: 15,
   };
 
-  // Mock roadmap data for trigonometry
   const mockTrigonometryRoadmap: RoadmapStage[] = [
     {
       id: "1",
@@ -332,7 +307,6 @@ export default function DashboardPage() {
   };
 
   const handleFinalQuizClick = () => {
-    // Check if all stages are completed
     const allCompleted = roadmapStages.every((stage) => stage.isCompleted);
     if (allCompleted) {
       setFinalQuiz(mockFinalQuiz);
@@ -413,7 +387,7 @@ export default function DashboardPage() {
               <motion.div
                 className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full relative"
                 initial={{ width: 0 }}
-                animate={{ width: `${generationProgress}%` }}
+                animate={{ width: `${generationStatus}` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
               >
                 <motion.div
@@ -429,7 +403,7 @@ export default function DashboardPage() {
             </div>
             <div className="text-center mt-4">
               <span className="text-4xl font-bold text-white">
-                {generationProgress}%
+                {generationStatus}%
               </span>
             </div>
           </motion.div>
@@ -465,6 +439,23 @@ export default function DashboardPage() {
     );
   }
 
+  if (generationError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-500 mb-4">
+            Error Generating Roadmap
+          </h2>
+          <p className="text-gray-400">
+            {generationError instanceof Error
+              ? generationError.message
+              : "An unexpected error occurred"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen overflow-hidden">
       <div className="relative z-10 w-full h-screen">
@@ -480,7 +471,6 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Final Quiz Modal */}
       <AnimatePresence>
         {showFinalQuiz && finalQuiz && (
           <FinalQuizModal

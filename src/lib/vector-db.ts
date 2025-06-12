@@ -1,6 +1,8 @@
-import { prisma } from "./prisma";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import crypto from "crypto";
-import { Prisma } from "@prisma/client";
+import { prisma } from "./prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 interface VectorSimilarityResult {
   id: string;
@@ -9,113 +11,184 @@ interface VectorSimilarityResult {
   similarity: number;
 }
 
-// Generate embedding using OpenAI (you can replace with your preferred embedding model)
-export async function generateEmbedding(text: string): Promise<number[]> {
-  try {
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        input: text,
-        model: "text-embedding-ada-002",
-      }),
-    });
+// Request queue for managing API calls
+class RequestQueue {
+  private queue: Array<() => Promise<void>> = [];
+  private processing = false;
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+  async add<T>(task: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await task();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.processQueue();
+    });
+  }
+
+  private async processQueue() {
+    if (this.processing || this.queue.length === 0) return;
+    this.processing = true;
+
+    while (this.queue.length > 0) {
+      const task = this.queue.shift();
+      if (task) {
+        await task();
+        // Add delay between requests to prevent rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
     }
 
-    const data = await response.json();
-    return data.data[0].embedding;
-  } catch (error) {
-    console.error("Error generating embedding:", error);
-    throw error;
+    this.processing = false;
   }
 }
 
-// Create a hash for the prompt to enable quick lookups
-export function createPromptHash(prompt: string): string {
+const requestQueue = new RequestQueue();
+
+// Initialize Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const embeddingModel = genAI.getGenerativeModel({
+  model: "gemini-embedding-exp-03-07",
+});
+
+// Retry mechanism with exponential backoff
+async function retryWithExponentialBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error as Error;
+      if (i < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, i);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+// Generate embeddings using Gemini
+async function generateEmbeddings(text: string): Promise<number[]> {
+  return await retryWithExponentialBackoff(async () => {
+    const result = await requestQueue.add(async () => {
+      const embedding = await embeddingModel.embedContent(text);
+      // Convert the embedding values to a number array and take first 1536 dimensions
+      const values = Array.from(embedding.embedding.values);
+      return values.slice(0, 1536);
+    });
+    return result;
+  });
+}
+
+// Create a hash for the prompt
+function createPromptHash(prompt: string): string {
   return crypto
     .createHash("sha256")
     .update(prompt.toLowerCase().trim())
     .digest("hex");
 }
 
-export async function findSimilarRoadmap(
+// Store roadmap with vector embedding
+export async function storeRoadmap(
   prompt: string,
-  threshold: number = 0.8
-): Promise<any | null> {
-  try {
-    const promptHash = createPromptHash(prompt);
+  content: any
+): Promise<string> {
+  const user = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-    // First, try exact hash match
-    const exactMatch = await prisma.roadmap.findUnique({
-      where: { promptHash },
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  const hash = crypto.createHash("sha256").update(prompt).digest("hex");
+  const promptHash = createPromptHash(prompt);
+
+  try {
+    const embedding = await generateEmbeddings(prompt);
+
+    await prisma.roadmap.upsert({
+      where: { id: hash },
+      create: {
+        id: hash,
+        prompt,
+        promptHash,
+        content,
+        userId: user.user.id,
+      },
+      update: {
+        prompt,
+        promptHash,
+        content,
+      },
     });
 
-    if (exactMatch) {
-      console.log("Found exact match for prompt hash:", promptHash);
-      return exactMatch;
-    }
-
-    // If no exact match, generate embedding for the prompt
-    const promptEmbedding = await generateEmbedding(prompt);
-
-    // Use raw SQL to perform vector similarity search
-    const similarRoadmaps = await prisma.$queryRaw<VectorSimilarityResult[]>`
-      SELECT id, prompt, content, 1 - (embedding <=> ${promptEmbedding}::vector) as similarity
-      FROM "roadmaps"
-      WHERE embedding IS NOT NULL
-      ORDER BY embedding <=> ${promptEmbedding}::vector
-      LIMIT 1
+    // Then update with vector using raw SQL
+    await prisma.$executeRaw`
+      UPDATE "roadmaps"
+      SET embedding = ${embedding}::vector
+      WHERE id = ${hash}
     `;
 
-    if (
-      similarRoadmaps.length > 0 &&
-      similarRoadmaps[0].similarity >= threshold
-    ) {
-      console.log(
-        "Found similar roadmap with similarity:",
-        similarRoadmaps[0].similarity
-      );
-      return similarRoadmaps[0];
-    }
-
-    console.log("No similar roadmap found above threshold");
-    return null;
+    return hash;
   } catch (error) {
-    console.error("Error finding similar roadmap:", error);
-    return null;
+    console.error("Error storing roadmap:", error);
+    throw error;
   }
 }
 
-// Store a new roadmap with embedding
-export async function storeRoadmap(prompt: string, content: any): Promise<any> {
+// Find similar roadmaps
+export async function findSimilarRoadmaps(
+  prompt: string,
+  limit: number = 5
+): Promise<VectorSimilarityResult[]> {
   try {
-    const promptHash = createPromptHash(prompt);
-    const embedding = await generateEmbedding(prompt);
+    // First, try exact hash match
+    const hash = crypto.createHash("sha256").update(prompt).digest("hex");
+    const exactMatch = await prisma.roadmap.findUnique({
+      where: { id: hash },
+    });
 
-    const roadmap = await prisma.$executeRaw`
-      INSERT INTO "roadmaps" (id, prompt, "promptHash", content, embedding, "createdAt", "updatedAt")
-      VALUES (
-        ${crypto.randomUUID()},
-        ${prompt},
-        ${promptHash},
-        ${content}::jsonb,
-        ${embedding}::vector,
-        NOW(),
-        NOW()
-      )
-      RETURNING *
+    if (exactMatch) {
+      return [
+        {
+          id: exactMatch.id,
+          prompt: exactMatch.prompt,
+          content: exactMatch.content,
+          similarity: 1.0,
+        },
+      ];
+    }
+
+    // If no exact match, perform vector similarity search
+    const embedding = await generateEmbeddings(prompt);
+
+    const similarRoadmaps = await prisma.$queryRaw<VectorSimilarityResult[]>`
+      SELECT
+        id,
+        prompt,
+        content,
+        1 - (embedding <=> ${embedding}::vector) as similarity
+      FROM "roadmaps"
+      WHERE embedding IS NOT NULL
+      ORDER BY embedding <=> ${embedding}::vector
+      LIMIT ${limit}
     `;
 
-    console.log("Successfully stored roadmap with hash:", promptHash);
-    return roadmap;
+    return similarRoadmaps;
   } catch (error) {
-    console.error("Error storing roadmap:", error);
+    console.error("Error finding similar roadmaps:", error);
     throw error;
   }
 }
