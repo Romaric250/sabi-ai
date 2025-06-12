@@ -94,7 +94,10 @@ function SidebarContent({ className, ...props }: HTMLMotionProps<"div">) {
         opacity: isOpen ? 1 : 0,
         transition: { duration: 0.2 },
       }}
-      className={cn("h-full overflow-hidden bg-white text-black ", className)}
+      className={cn(
+        "h-full overflow-hidden bg-white text-black border-r",
+        className
+      )}
       {...props}
     />
   );

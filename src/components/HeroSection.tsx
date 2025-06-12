@@ -114,19 +114,16 @@ export function HeroSection() {
         >
           {data?.user ? (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+              <div className="flex items-center gap-2 px-4 py-2 bg-primary backdrop-blur-sm rounded-full border border-white/20">
                 <User className="w-4 h-4 text-white" />
                 <span className="text-white text-sm">
                   {data.user.name || data.user.email}
                 </span>
               </div>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 backdrop-blur-sm rounded-full border border-red-500/30 text-red-300 hover:text-red-200 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
+              <Button onClick={handleSignOut} variant="destructive">
+                <LogOut className="size-4" />
                 <span className="text-sm">Sign Out</span>
-              </button>
+              </Button>
             </div>
           ) : (
             <button
@@ -266,6 +263,14 @@ export function HeroSection() {
                       placeholder="Enter your prompt"
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleGenerate(
+                            e as unknown as React.FormEvent<HTMLFormElement>
+                          );
+                        }
+                      }}
                       className="h-20 resize-none"
                     />
                     <Button className="sr-only" type="submit">

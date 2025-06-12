@@ -4,7 +4,15 @@ import { FinalQuizModal } from "@/components/FinalQuizModal";
 import { StageSheet } from "@/components/StageSheet";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Sparkles, Star, Trophy, Zap } from "lucide-react";
+import {
+  Brain,
+  Loader,
+  Loader2,
+  Sparkles,
+  Star,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -44,12 +52,12 @@ export default function DashboardPage() {
   const {
     mutate: generateRoadmapMutation,
     isPending: isGenerating,
-    data: roadmapData,
     error: generationError,
-    status: generationStatus,
   } = useMutation({
     mutationFn: (prompt: string) => generateRoadmap(prompt),
     onSuccess: (data: RoadmapData) => {
+      console.log(data);
+
       if (data.roadmap) {
         const stages = data.roadmap;
 
@@ -322,7 +330,7 @@ export default function DashboardPage() {
         if (stage.id === stageId) {
           return { ...stage, isCompleted: true };
         }
-        // Unlock next stage
+
         if (stage.id === String(parseInt(stageId) + 1)) {
           return { ...stage, isUnlocked: true };
         }
@@ -346,93 +354,11 @@ export default function DashboardPage() {
 
   if (isGenerating) {
     return (
-      <div className="">
+      <div className="min-h-screen py-20">
         <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-16"
-          >
-            <h1 className="text-5xl sm:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-              Creating Your
-            </h1>
-            <h2 className="text-6xl sm:text-8xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-              {prompt} Journey
-            </h2>
-          </motion.div>
-
-          <motion.div
-            className="relative w-48 h-48 mx-auto mb-16"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full blur-2xl opacity-60" />
-            <motion.div
-              className="absolute inset-4 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full overflow-hidden"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="w-full h-full rounded-full flex items-center justify-center">
-                <Brain className="w-16 h-16 text-white" />
-              </div>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-12 max-w-2xl mx-auto"
-          >
-            <div className="relative w-full h-6 bg-slate-800/50 rounded-full overflow-hidden backdrop-blur-sm border border-slate-700/50">
-              <motion.div
-                className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-full relative"
-                initial={{ width: 0 }}
-                animate={{ width: `${generationStatus}` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12"
-                  animate={{ x: ["-100%", "300%"] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              </motion.div>
-            </div>
-            <div className="text-center mt-4">
-              <span className="text-4xl font-bold text-white">
-                {generationStatus}%
-              </span>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12"
-          >
-            <div className="inline-flex items-center gap-6 px-8 py-6 rounded-2xl backdrop-blur-sm border border-white/10 bg-gradient-to-r from-purple-500/20 to-blue-500/20">
-              <motion.div
-                animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-                transition={{
-                  rotate: { duration: 3, repeat: Infinity, ease: "linear" },
-                  scale: { duration: 1, repeat: Infinity },
-                }}
-                className="text-purple-400"
-              >
-                <Sparkles size={32} />
-              </motion.div>
-              <div className="text-left">
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  🧠 AI is crafting your personalized roadmap...
-                </h3>
-                <p className="text-gray-300 text-lg">
-                  Creating the perfect learning journey just for you
-                </p>
-              </div>
-            </div>
+          <motion.div className="mx-auto w-full flex items-center justify-center gap-2">
+            <Loader className="size-10 animate-spin text-primary" />
+            <span className="text-xl font-bold">Cooking Your Journey</span>
           </motion.div>
         </div>
       </div>
