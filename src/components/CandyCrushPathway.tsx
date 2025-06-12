@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Lock, CheckCircle, Play, Star, Sparkles, Trophy } from 'lucide-react';
-import { RoadmapStage } from '@/types/roadmap';
+import { motion } from "framer-motion";
+import { Lock, CheckCircle, Play, Star, Sparkles, Trophy } from "lucide-react";
+import { RoadmapStage } from "@/types/roadmap";
 
 interface CandyCrushPathwayProps {
   stages: RoadmapStage[];
@@ -10,7 +10,11 @@ interface CandyCrushPathwayProps {
   onFinalQuizClick?: () => void;
 }
 
-export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: CandyCrushPathwayProps) {
+export function CandyCrushPathway({
+  stages,
+  onStageClick,
+  onFinalQuizClick,
+}: CandyCrushPathwayProps) {
   const stageSize = 120;
   const spacing = 160;
 
@@ -26,17 +30,19 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
 
   // Create SVG path for the winding road
   const createPath = () => {
-    const pathData = pathCoordinates.map((coord, index) => {
-      const x = coord.x * spacing + stageSize / 2;
-      const y = coord.y * spacing + stageSize / 2;
-      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-    }).join(' ');
+    const pathData = pathCoordinates
+      .map((coord, index) => {
+        const x = coord.x * spacing + stageSize / 2;
+        const y = coord.y * spacing + stageSize / 2;
+        return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+      })
+      .join(" ");
     return pathData;
   };
 
   // Calculate container dimensions
-  const maxX = Math.max(...pathCoordinates.map(p => p.x));
-  const maxY = Math.max(...pathCoordinates.map(p => p.y));
+  const maxX = Math.max(...pathCoordinates.map((p) => p.x));
+  const maxY = Math.max(...pathCoordinates.map((p) => p.y));
   const containerWidth = (maxX + 1) * spacing + stageSize;
   const containerHeight = (maxY + 1) * spacing + stageSize + 200; // Extra space for final quiz
 
@@ -72,27 +78,35 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
       ))}
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
-
         {/* Main pathway container */}
-        <div 
+        <div
           className="relative"
-          style={{ 
-            width: containerWidth, 
-            height: containerHeight 
+          style={{
+            width: containerWidth,
+            height: containerHeight,
           }}
         >
           {/* SVG Road Path */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            style={{ zIndex: 1 }}
-          >
+          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
             <defs>
-              <linearGradient id="roadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient
+                id="roadGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
                 <stop offset="0%" stopColor="#3b82f6" />
                 <stop offset="50%" stopColor="#6366f1" />
                 <stop offset="100%" stopColor="#8b5cf6" />
               </linearGradient>
-              <linearGradient id="completedRoadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient
+                id="completedRoadGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
                 <stop offset="0%" stopColor="#10b981" />
                 <stop offset="50%" stopColor="#059669" />
                 <stop offset="100%" stopColor="#047857" />
@@ -113,13 +127,19 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
             {/* Progress road path - changes color based on completion */}
             <path
               d={createPath()}
-              stroke={stages.filter(s => s.isCompleted).length > 0 ? "url(#completedRoadGradient)" : "url(#roadGradient)"}
+              stroke={
+                stages.filter((s) => s.isCompleted).length > 0
+                  ? "url(#completedRoadGradient)"
+                  : "url(#roadGradient)"
+              }
               strokeWidth="20"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               className="drop-shadow-lg"
-              strokeDasharray={`${stages.filter(s => s.isCompleted).length * 160} 1000`}
+              strokeDasharray={`${
+                stages.filter((s) => s.isCompleted).length * 160
+              } 1000`}
               strokeDashoffset="0"
             />
           </svg>
@@ -127,7 +147,9 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
           {/* Stage nodes */}
           {stages.map((stage, index) => {
             const position = pathCoordinates[index] || { x: 0, y: 0 };
-            const isUnlocked = stage.isUnlocked ?? (index === 0 || (index > 0 && stages[index - 1]?.isCompleted));
+            const isUnlocked =
+              stage.isUnlocked ??
+              (index === 0 || (index > 0 && stages[index - 1]?.isCompleted));
             const isCompleted = stage.isCompleted ?? false;
 
             return (
@@ -143,16 +165,24 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
                 }}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: index * 0.2, type: "spring", stiffness: 200 }}
+                transition={{
+                  delay: index * 0.2,
+                  type: "spring",
+                  stiffness: 200,
+                }}
               >
                 <motion.div
                   className={`relative w-full h-full rounded-full cursor-pointer ${
-                    isUnlocked ? 'hover:scale-110' : 'cursor-not-allowed'
+                    isUnlocked ? "hover:scale-110" : "cursor-not-allowed"
                   }`}
-                  whileHover={isUnlocked ? { 
-                    scale: 1.1,
-                    y: -10,
-                  } : {}}
+                  whileHover={
+                    isUnlocked
+                      ? {
+                          scale: 1.1,
+                          y: -10,
+                        }
+                      : {}
+                  }
                   onClick={() => isUnlocked && onStageClick(stage)}
                 >
                   {/* Glow effect for unlocked stages */}
@@ -172,16 +202,19 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
                   )}
 
                   {/* Stage circle */}
-                  <div className={`
+                  <div
+                    className={`
                     relative w-full h-full rounded-full border-4 flex flex-col items-center justify-center
-                    ${isCompleted 
-                      ? 'bg-gradient-to-r from-green-400 to-emerald-500 border-green-300 shadow-green-500/50' 
-                      : isUnlocked 
-                        ? `bg-gradient-to-r ${stage.color} border-white shadow-lg` 
-                        : 'bg-gray-600 border-gray-500 shadow-gray-500/50'
+                    ${
+                      isCompleted
+                        ? "bg-gradient-to-r from-green-400 to-emerald-500 border-green-300 shadow-green-500/50"
+                        : isUnlocked
+                        ? `bg-gradient-to-r ${stage.color} border-white shadow-lg`
+                        : "bg-gray-600 border-gray-500 shadow-gray-500/50"
                     }
                     shadow-2xl
-                  `}>
+                  `}
+                  >
                     {/* Stage icon */}
                     <div className="text-white mb-1">
                       {isCompleted ? (
@@ -202,7 +235,9 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
                   {/* Stage title */}
                   <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 text-center">
                     <div className="bg-black/70 backdrop-blur-sm rounded-lg px-3 py-1 border border-white/20">
-                      <h3 className="font-bold text-white text-sm whitespace-nowrap">{stage.title}</h3>
+                      <h3 className="font-bold text-white text-sm whitespace-nowrap">
+                        {stage.title}
+                      </h3>
                     </div>
                   </div>
 
@@ -227,17 +262,21 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
           <motion.div
             className="absolute"
             style={{
-              left: (maxX * spacing) + spacing / 2 - 80,
+              left: maxX * spacing + spacing / 2 - 80,
               top: (maxY + 1) * spacing + 50,
               zIndex: 10,
             }}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: stages.length * 0.2 + 0.5, type: "spring", stiffness: 200 }}
+            transition={{
+              delay: stages.length * 0.2 + 0.5,
+              type: "spring",
+              stiffness: 200,
+            }}
           >
             <motion.div
               className="relative w-40 h-40 rounded-full cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 border-4 border-white shadow-2xl flex flex-col items-center justify-center"
-              whileHover={{ 
+              whileHover={{
                 scale: 1.1,
                 y: -10,
               }}
@@ -264,7 +303,9 @@ export function CandyCrushPathway({ stages, onStageClick, onFinalQuizClick }: Ca
               {/* Title */}
               <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
                 <div className="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
-                  <h3 className="font-bold text-white text-sm whitespace-nowrap">Final Assessment</h3>
+                  <h3 className="font-bold text-white text-sm whitespace-nowrap">
+                    Final Assessment
+                  </h3>
                 </div>
               </div>
             </motion.div>

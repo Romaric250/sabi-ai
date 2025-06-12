@@ -1,6 +1,5 @@
 "use client";
 
-import { CandyCrushPathway } from "@/components/CandyCrushPathway";
 import { FinalQuizModal } from "@/components/FinalQuizModal";
 import { StageSheet } from "@/components/StageSheet";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,6 +7,7 @@ import { Brain, Sparkles, Star, Trophy, Zap } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import Stages from "@/components/stages";
 import { authClient } from "@/lib/auth-client";
 import { FinalQuiz, RoadmapStage } from "@/types/roadmap";
 
@@ -372,7 +372,7 @@ export default function DashboardPage() {
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
+      <div className="">
         <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -466,17 +466,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
-      {/* Candy Crush Style Roadmap - Full Screen */}
+    <div className="min-h-screen overflow-hidden">
       <div className="relative z-10 w-full h-screen">
-        <CandyCrushPathway
-          stages={roadmapStages}
-          onStageClick={handleStageClick}
-          onFinalQuizClick={handleFinalQuizClick}
-        />
+        <Stages stages={roadmapStages} onStageClick={handleStageClick} />
       </div>
 
-      {/* Stage Sheet */}
       {selectedStage && (
         <StageSheet
           stage={selectedStage}
