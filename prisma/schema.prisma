@@ -20,6 +20,7 @@ model User {
   sessions Session[]
   accounts Account[]
   roadmaps UserRoadmap[]
+  Roadmap  Roadmap[]
 
   @@map("users")
 }
@@ -73,15 +74,19 @@ model Verification {
 }
 
 model Roadmap {
-  id         String   @id @default(cuid())
-  prompt     String   @unique
-  promptHash String   @unique
+  id         String                       @id @default(cuid())
+  userId     String?
+  prompt     String                       @unique
+  promptHash String                       @unique
   content    Json
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime                     @default(now())
+  updatedAt  DateTime                     @updatedAt
+  isPublic   Boolean                      @default(false)
 
   // Relations
   userRoadmaps UserRoadmap[]
+  user         User?         @relation(fields: [userId], references: [id])
 
   @@map("roadmaps")
 }

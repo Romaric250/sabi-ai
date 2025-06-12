@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { findSimilarRoadmap, storeRoadmap } from '@/lib/vector-db';
-import { auth } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { findSimilarRoadmap, storeRoadmap } from "@/lib/vector-db";
+import { auth } from "@/lib/auth";
 
 interface RoadmapStage {
   id: string;
@@ -18,7 +18,6 @@ interface RoadmapStage {
   color: string;
 }
 
-// Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function generateRoadmapWithAI(prompt: string): Promise<RoadmapStage[]> {
@@ -45,7 +44,7 @@ Create a roadmap with exactly this JSON structure:
         {
           "title": "Introduction to Topic",
           "type": "text",
-          "content": "# Introduction to [Topic]\n\n## Overview\nDetailed explanation with examples, definitions, and practical applications.\n\n## Key Concepts\n- **Concept 1**: Definition and explanation\n- **Concept 2**: Definition and explanation\n- **Concept 3**: Definition and explanation\n\n## Step-by-Step Guide\n1. First step with detailed explanation\n2. Second step with examples\n3. Third step with practice exercises\n\n## Real-World Applications\nExplain how this topic applies in real scenarios with specific examples.\n\n## Summary\nKey takeaways and what students should remember.",
+          "content": "# Introduction to [Topic]\\n\\n## Overview\\nDetailed explanation with examples, definitions, and practical applications.\\n\\n## Key Concepts\\n- **Concept 1**: Definition and explanation\\n- **Concept 2**: Definition and explanation\\n- **Concept 3**: Definition and explanation\\n\\n## Step-by-Step Guide\\n1. First step with detailed explanation\\n2. Second step with examples\\n3. Third step with practice exercises\\n\\n## Real-World Applications\\nExplain how this topic applies in real scenarios with specific examples.\\n\\n## Summary\\nKey takeaways and what students should remember.",
           "readTime": "10 min"
         },
         {
@@ -114,170 +113,240 @@ Return ONLY the JSON object, nothing else.
       let cleanedText = text.trim();
 
       // Remove ```json and ``` markers
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      if (cleanedText.startsWith("```json")) {
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, "")
+          .replace(/\s*```$/, "");
+      } else if (cleanedText.startsWith("```")) {
+        cleanedText = cleanedText.replace(/^```\s*/, "").replace(/\s*```$/, "");
       }
 
-      console.log('Cleaned roadmap response:', cleanedText);
+      console.log("Cleaned roadmap response:", cleanedText);
 
       const roadmapData = JSON.parse(cleanedText);
 
       // Return the stages array from the new structure
       return roadmapData.stages || roadmapData;
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      console.error('Raw text:', text);
+      console.error("Failed to parse AI response:", parseError);
+      console.error("Raw text:", text);
       return getMockRoadmap(prompt);
     }
   } catch (error) {
-    console.error('Gemini AI error:', error);
+    console.error("Gemini AI error:", error);
     return getMockRoadmap(prompt);
   }
 }
 
-// Fallback mock roadmap generation
 function getMockRoadmap(prompt: string): RoadmapStage[] {
   const roadmaps: { [key: string]: RoadmapStage[] } = {
-    'trigonometry': [
+    trigonometry: [
       {
-        id: '1',
-        title: 'Basic Angles',
-        description: 'Understanding degrees, radians, and angle measurement',
-        lessons: ['What are angles?', 'Degrees vs Radians', 'Unit Circle Introduction'],
-        materials: ['Interactive Angle Visualizer', 'Degree-Radian Converter', 'Practice Worksheets'],
+        id: "1",
+        title: "Basic Angles",
+        description: "Understanding degrees, radians, and angle measurement",
+        lessons: [
+          "What are angles?",
+          "Degrees vs Radians",
+          "Unit Circle Introduction",
+        ],
+        materials: [
+          "Interactive Angle Visualizer",
+          "Degree-Radian Converter",
+          "Practice Worksheets",
+        ],
         quiz: [
           {
-            question: 'How many degrees are in a full circle?',
-            options: ['180°', '270°', '360°', '90°'],
-            correct: 2
+            question: "How many degrees are in a full circle?",
+            options: ["180°", "270°", "360°", "90°"],
+            correct: 2,
           },
           {
-            question: 'What is π radians in degrees?',
-            options: ['90°', '180°', '270°', '360°'],
-            correct: 1
-          }
+            question: "What is π radians in degrees?",
+            options: ["90°", "180°", "270°", "360°"],
+            correct: 1,
+          },
         ],
         position: { x: 2, y: 0 },
-        color: 'from-green-400 to-emerald-500'
+        color: "from-green-400 to-emerald-500",
       },
       {
-        id: '2',
-        title: 'Sine Function',
-        description: 'Master the sine function and its properties',
-        lessons: ['Definition of Sine', 'Sine Wave Properties', 'Sine in Right Triangles'],
-        materials: ['Sine Wave Simulator', 'Triangle Calculator', 'Graphing Tool'],
+        id: "2",
+        title: "Sine Function",
+        description: "Master the sine function and its properties",
+        lessons: [
+          "Definition of Sine",
+          "Sine Wave Properties",
+          "Sine in Right Triangles",
+        ],
+        materials: [
+          "Sine Wave Simulator",
+          "Triangle Calculator",
+          "Graphing Tool",
+        ],
         quiz: [
           {
-            question: 'What is sin(90°)?',
-            options: ['0', '1', '-1', '0.5'],
-            correct: 1
+            question: "What is sin(90°)?",
+            options: ["0", "1", "-1", "0.5"],
+            correct: 1,
           },
           {
-            question: 'What is the range of the sine function?',
-            options: ['[0, 1]', '[-1, 1]', '[0, ∞]', '(-∞, ∞)'],
-            correct: 1
-          }
+            question: "What is the range of the sine function?",
+            options: ["[0, 1]", "[-1, 1]", "[0, ∞]", "(-∞, ∞)"],
+            correct: 1,
+          },
         ],
         position: { x: 1, y: 1 },
-        color: 'from-blue-400 to-cyan-500'
+        color: "from-blue-400 to-cyan-500",
       },
       {
-        id: '3',
-        title: 'Cosine Function',
-        description: 'Explore cosine and its relationship to sine',
-        lessons: ['Definition of Cosine', 'Cosine Wave Properties', 'Cosine in Right Triangles'],
-        materials: ['Cosine Wave Simulator', 'Comparison Tool', 'Practice Problems'],
+        id: "3",
+        title: "Cosine Function",
+        description: "Explore cosine and its relationship to sine",
+        lessons: [
+          "Definition of Cosine",
+          "Cosine Wave Properties",
+          "Cosine in Right Triangles",
+        ],
+        materials: [
+          "Cosine Wave Simulator",
+          "Comparison Tool",
+          "Practice Problems",
+        ],
         quiz: [
           {
-            question: 'What is cos(0°)?',
-            options: ['0', '1', '-1', '0.5'],
-            correct: 1
+            question: "What is cos(0°)?",
+            options: ["0", "1", "-1", "0.5"],
+            correct: 1,
           },
           {
-            question: 'How is cosine related to sine?',
-            options: ['cos(x) = sin(x)', 'cos(x) = sin(90° - x)', 'cos(x) = -sin(x)', 'No relation'],
-            correct: 1
-          }
+            question: "How is cosine related to sine?",
+            options: [
+              "cos(x) = sin(x)",
+              "cos(x) = sin(90° - x)",
+              "cos(x) = -sin(x)",
+              "No relation",
+            ],
+            correct: 1,
+          },
         ],
         position: { x: 3, y: 1 },
-        color: 'from-purple-400 to-pink-500'
+        color: "from-purple-400 to-pink-500",
       },
       {
-        id: '4',
-        title: 'Tangent Function',
-        description: 'Understanding tangent and its applications',
-        lessons: ['Definition of Tangent', 'Tangent Properties', 'Tangent in Problem Solving'],
-        materials: ['Tangent Visualizer', 'Slope Calculator', 'Real-world Examples'],
+        id: "4",
+        title: "Tangent Function",
+        description: "Understanding tangent and its applications",
+        lessons: [
+          "Definition of Tangent",
+          "Tangent Properties",
+          "Tangent in Problem Solving",
+        ],
+        materials: [
+          "Tangent Visualizer",
+          "Slope Calculator",
+          "Real-world Examples",
+        ],
         quiz: [
           {
-            question: 'What is tan(45°)?',
-            options: ['0', '1', '-1', '√3'],
-            correct: 1
+            question: "What is tan(45°)?",
+            options: ["0", "1", "-1", "√3"],
+            correct: 1,
           },
           {
-            question: 'What is tan(x) equal to?',
-            options: ['sin(x)/cos(x)', 'cos(x)/sin(x)', 'sin(x) + cos(x)', 'sin(x) - cos(x)'],
-            correct: 0
-          }
+            question: "What is tan(x) equal to?",
+            options: [
+              "sin(x)/cos(x)",
+              "cos(x)/sin(x)",
+              "sin(x) + cos(x)",
+              "sin(x) - cos(x)",
+            ],
+            correct: 0,
+          },
         ],
         position: { x: 2, y: 2 },
-        color: 'from-orange-400 to-red-500'
+        color: "from-orange-400 to-red-500",
       },
       {
-        id: '5',
-        title: 'Trig Identities',
-        description: 'Master fundamental trigonometric identities',
-        lessons: ['Pythagorean Identity', 'Sum and Difference Formulas', 'Double Angle Formulas'],
-        materials: ['Identity Proof Tool', 'Formula Reference', 'Practice Generator'],
+        id: "5",
+        title: "Trig Identities",
+        description: "Master fundamental trigonometric identities",
+        lessons: [
+          "Pythagorean Identity",
+          "Sum and Difference Formulas",
+          "Double Angle Formulas",
+        ],
+        materials: [
+          "Identity Proof Tool",
+          "Formula Reference",
+          "Practice Generator",
+        ],
         quiz: [
           {
-            question: 'What is sin²θ + cos²θ equal to?',
-            options: ['0', '1', 'tan²θ', '2'],
-            correct: 1
+            question: "What is sin²θ + cos²θ equal to?",
+            options: ["0", "1", "tan²θ", "2"],
+            correct: 1,
           },
           {
-            question: 'What is sin(2θ) equal to?',
-            options: ['2sin(θ)', '2cos(θ)', '2sin(θ)cos(θ)', 'sin²(θ)'],
-            correct: 2
-          }
+            question: "What is sin(2θ) equal to?",
+            options: ["2sin(θ)", "2cos(θ)", "2sin(θ)cos(θ)", "sin²(θ)"],
+            correct: 2,
+          },
         ],
         position: { x: 1, y: 3 },
-        color: 'from-indigo-400 to-purple-500'
+        color: "from-indigo-400 to-purple-500",
       },
       {
-        id: '6',
-        title: 'Applications',
-        description: 'Real-world applications of trigonometry',
-        lessons: ['Physics Applications', 'Engineering Uses', 'Navigation and GPS'],
-        materials: ['Simulation Tools', 'Case Studies', 'Project Ideas'],
+        id: "6",
+        title: "Applications",
+        description: "Real-world applications of trigonometry",
+        lessons: [
+          "Physics Applications",
+          "Engineering Uses",
+          "Navigation and GPS",
+        ],
+        materials: ["Simulation Tools", "Case Studies", "Project Ideas"],
         quiz: [
           {
-            question: 'Trigonometry is used in which field?',
-            options: ['Physics', 'Engineering', 'Navigation', 'All of the above'],
-            correct: 3
+            question: "Trigonometry is used in which field?",
+            options: [
+              "Physics",
+              "Engineering",
+              "Navigation",
+              "All of the above",
+            ],
+            correct: 3,
           },
           {
-            question: 'What does SOH-CAH-TOA help remember?',
-            options: ['Angle names', 'Trig ratios', 'Unit circle', 'Identities'],
-            correct: 1
-          }
+            question: "What does SOH-CAH-TOA help remember?",
+            options: [
+              "Angle names",
+              "Trig ratios",
+              "Unit circle",
+              "Identities",
+            ],
+            correct: 1,
+          },
         ],
         position: { x: 3, y: 3 },
-        color: 'from-yellow-400 to-orange-500'
-      }
-    ]
+        color: "from-yellow-400 to-orange-500",
+      },
+    ],
   };
 
   // Simple keyword matching for fallback
   const lowerPrompt = prompt.toLowerCase();
-  if (lowerPrompt.includes('trigonometry') || lowerPrompt.includes('trig') || lowerPrompt.includes('sine') || lowerPrompt.includes('cosine')) {
-    return roadmaps['trigonometry'];
+  if (
+    lowerPrompt.includes("trigonometry") ||
+    lowerPrompt.includes("trig") ||
+    lowerPrompt.includes("sine") ||
+    lowerPrompt.includes("cosine")
+  ) {
+    return roadmaps["trigonometry"];
   }
 
   // Default to trigonometry
-  return roadmaps['trigonometry'];
+  return roadmaps["trigonometry"];
 }
 
 export async function POST(request: NextRequest) {
@@ -286,34 +355,37 @@ export async function POST(request: NextRequest) {
 
     if (!prompt) {
       return NextResponse.json(
-        { error: 'Prompt is required' },
+        { error: "Prompt is required" },
         { status: 400 }
       );
     }
 
-    // Check if we have a similar roadmap in the vector database
-    console.log('Searching for similar roadmap for prompt:', prompt);
+    console.log("Searching for similar roadmap for prompt:", prompt);
     const existingRoadmap = await findSimilarRoadmap(prompt);
 
     if (existingRoadmap) {
-      console.log('Found existing roadmap, returning cached result');
+      console.log("Found similar roadmap, returning cached result");
       return NextResponse.json({
         roadmap: existingRoadmap.content,
         cached: true,
-        message: 'Retrieved from cache'
+        similarity: existingRoadmap.similarity,
+        originalPrompt: existingRoadmap.prompt,
+        message: `Retrieved from cache (${Math.round(
+          existingRoadmap.similarity * 100
+        )}% similar to "${existingRoadmap.prompt}")`,
       });
     }
 
     // Generate roadmap using Gemini AI
-    console.log('Generating new roadmap with AI for prompt:', prompt);
+    console.log("Generating new roadmap with AI for prompt:", prompt);
     const roadmap = await generateRoadmapWithAI(prompt);
 
     // Store the new roadmap in the vector database for future use
     try {
       await storeRoadmap(prompt, roadmap);
-      console.log('Successfully stored roadmap in vector database');
+      console.log("Successfully stored roadmap in vector database");
     } catch (storeError) {
-      console.error('Failed to store roadmap in vector database:', storeError);
+      console.error("Failed to store roadmap in vector database:", storeError);
       // Continue anyway, don't fail the request
     }
 
@@ -322,13 +394,12 @@ export async function POST(request: NextRequest) {
       roadmap,
       prompt,
       cached: false,
-      message: 'Generated new roadmap'
+      message: "Generated new roadmap",
     });
-    
   } catch (error) {
-    console.error('Error generating roadmap:', error);
+    console.error("Error generating roadmap:", error);
     return NextResponse.json(
-      { error: 'Failed to generate roadmap' },
+      { error: "Failed to generate roadmap" },
       { status: 500 }
     );
   }
@@ -336,9 +407,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Roadmap generation API is running',
+    message: "Roadmap generation API is running",
     endpoints: {
-      POST: '/api/generate-roadmap - Generate a new roadmap from a prompt'
-    }
+      POST: "/api/generate-roadmap - Generate a new roadmap from a prompt",
+    },
   });
 }
