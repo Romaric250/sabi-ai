@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,9 +26,21 @@ interface SidebarProviderProps {
 const SidebarProvider = ({ children }: SidebarProviderProps) => {
   const [isOpen, setIsOpen] = useState(true);
 
-  const toggleSidebar = React.useCallback(() => {
+  const toggleSidebar = useCallback(() => {
     return setIsOpen((open) => !open);
   }, [setIsOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key.toLowerCase() === "b") {
+        event.preventDefault();
+        toggleSidebar();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar]);
 
   const contextValue: SidebarContextType = {
     isOpen,
@@ -48,14 +66,20 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn("size-7", className)}
+      className={cn("size-10", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
       {...props}
     >
-      <PanelLeftIcon className={isOpen ? "rotate-0" : "rotate-180"} />
+      <div className="size-5 rounded-[4px] border border-black flex items-center ">
+        <motion.div
+          animate={{ width: isOpen ? 10 : 4, height: 16 }}
+          transition={{ duration: 0.2 }}
+          className="bg-black ml-px rounded-[2px]"
+        />
+      </div>
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -71,7 +95,7 @@ function SidebarContent({ className, ...props }: HTMLMotionProps<"div">) {
         opacity: isOpen ? 1 : 0,
         transition: { duration: 0.2 },
       }}
-      className={cn("h-full overflow-hidden bg-white text-black", className)}
+      className={cn("h-full overflow-hidden bg-white text-black ", className)}
       {...props}
     />
   );

@@ -8,16 +8,10 @@ const DashboardSidebar = () => {
     <div className="fixed top-0 left-0 h-screen z-50 flex">
       <div className="relative">
         <SidebarContent className="bg-white">
-          <div className="p-4">
-            <div className="flex flex-col gap-2">
-              <Link href="/dashboard">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
-              </Link>
-            </div>
-          </div>
+          <div className="p-4"></div>
         </SidebarContent>
-        <div className="absolute right-0 top-4 translate-x-1/2">
-          <SidebarTrigger className="bg-white shadow-md rounded-full" />
+        <div className="fixed left-4 top-4">
+          <SidebarTrigger className="shadow-none bg-white text-black hover:bg-white/90" />
         </div>
       </div>
     </div>
