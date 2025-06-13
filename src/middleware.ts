@@ -10,7 +10,6 @@ export default async function authMiddleware(request: NextRequest) {
   const pathName = request.nextUrl.pathname;
   const isAuthRoute = authRoutes.includes(pathName);
   const isPasswordRoute = passwordRoutes.includes(pathName);
-  const isAdminRoute = adminRoutes.includes(pathName);
 
   const { data: session } = await betterFetch<Session>(
     "/api/auth/get-session",

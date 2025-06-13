@@ -1,3 +1,5 @@
+import nodemailer from "nodemailer";
+
 export const sendEmail = async ({
   to,
   subject,
@@ -7,22 +9,22 @@ export const sendEmail = async ({
   subject: string;
   text: string;
 }) => {
-  const response = await fetch("https://api.emailservice.com/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.EMAIL_API_KEY}`,
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
-    body: JSON.stringify({
-      to,
-      subject,
-      text,
-    }),
   });
 
-  if (!response.ok) {
-    throw new Error(`Failed to send email: ${response.statusText}`);
-  }
+  const info = await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to,
+    subject,
+    text,
+  });
 
-  return response.json();
+  return info;
 };
