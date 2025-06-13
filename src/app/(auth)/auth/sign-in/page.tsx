@@ -55,7 +55,8 @@ export default function SignIn() {
           router.refresh();
         },
         onError: (ctx: ErrorContext) => {
-          console.log(ctx);
+          toast.error(ctx.error.message);
+          console.log(ctx.error);
         },
       }
     );

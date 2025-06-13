@@ -50,8 +50,8 @@ export default function SignUp() {
           toast.success("Account created successfully, check your email");
         },
         onError: (ctx) => {
-          console.log("error", ctx);
-          toast.error("Something went wrong");
+          const error = ctx.error;
+          toast.error(error.message);
         },
       }
     );
