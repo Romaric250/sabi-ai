@@ -23,7 +23,13 @@ interface SidebarProviderProps {
 }
 
 const SidebarProvider = ({ children }: SidebarProviderProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("sidebar-open");
+      return stored === null ? false : stored === "true";
+    }
+    return false;
+  });
 
   const toggleSidebar = useCallback(() => {
     return setIsOpen((open) => !open);
@@ -40,6 +46,10 @@ const SidebarProvider = ({ children }: SidebarProviderProps) => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [toggleSidebar]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-open", String(isOpen));
+  }, [isOpen]);
 
   const contextValue: SidebarContextType = {
     isOpen,

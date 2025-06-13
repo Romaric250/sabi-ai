@@ -1,16 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { HeroSection } from "@/components/HeroSection";
-import { FeatureShowcase } from "@/components/FeatureShowcase";
-import { SampleRoadmaps } from "@/components/SampleRoadmaps";
-import { InteractiveDemo } from "@/components/InteractiveDemo";
-import { StatsSection } from "@/components/StatsSection";
-import { TestimonialsSection } from "@/components/TestimonialsSection";
-import { CTASection } from "@/components/CTASection";
-import { FloatingElements } from "@/components/FloatingElements";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);

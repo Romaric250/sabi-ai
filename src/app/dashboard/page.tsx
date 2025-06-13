@@ -4,22 +4,13 @@ import { FinalQuizModal } from "@/components/FinalQuizModal";
 import { StageSheet } from "@/components/StageSheet";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Brain,
-  Loader,
-  Loader2,
-  Sparkles,
-  Star,
-  Trophy,
-  Zap,
-} from "lucide-react";
+import { Brain, Loader, Sparkles, Star, Trophy, Zap } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import Stages from "@/components/stages";
-import { authClient } from "@/lib/auth-client";
-import { FinalQuiz, RoadmapStage, RoadmapData } from "@/types/roadmap";
 import { transformRoadmap } from "@/lib/transform";
+import { FinalQuiz, RoadmapData, RoadmapStage } from "@/types/roadmap";
 
 // API functions
 async function generateRoadmap(prompt: string): Promise<RoadmapData> {
@@ -39,8 +30,6 @@ async function generateRoadmap(prompt: string): Promise<RoadmapData> {
 const DashboardPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session, isPending: isSessionLoading } =
-    authClient.useSession();
   const prompt = searchParams.get("prompt");
 
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);

@@ -2,8 +2,6 @@ import { RoadmapData, RoadmapStage } from "@/types/roadmap";
 import { Brain, Sparkles, Star, Trophy, Zap } from "lucide-react";
 
 export const transformRoadmap = (roadmap: RoadmapData) => {
-  console.log(roadmap);
-
   const stages = roadmap.roadmap;
 
   const transformedRoadmap = stages.map(
