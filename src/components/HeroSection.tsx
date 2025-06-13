@@ -90,7 +90,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col px-4 sm:px-6 lg:px-8 text">
+    <section className="relative h-[50vh] flex flex-col px-4 sm:px-6 lg:px-8 text ">
       {/* <ParticleField /> */}
 
       {/* Navigation */}

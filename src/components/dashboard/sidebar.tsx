@@ -1,20 +1,64 @@
 "use client";
 
+import { useSession } from "@/components/session";
+import { SidebarContent, SidebarTrigger } from "../ui/sidebar";
+import { roadMapApi } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { Roadmap } from "@prisma/client";
 import Link from "next/link";
-import { SidebarContent, SidebarTrigger, useSidebar } from "../ui/sidebar";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
-const DashboardSidebar = () => {
+interface DashboardSidebarProps {}
+
+const DashboardSidebar = ({}: DashboardSidebarProps) => {
+  const { user } = useSession();
+
+  const { data: roadmaps, isLoading } = useQuery({
+    queryKey: ["roadmaps", user.id],
+    queryFn: () => roadMapApi.getUserRoadmaps(user.id),
+    enabled: !!user.id,
+  });
+
   return (
     <div className="fixed top-0 left-0 h-screen z-50 flex">
       <div className="relative">
         <SidebarContent className="bg-white">
-          <div className="p-4"></div>
+          <div className="p-4">
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : (
+              <RoadmapList roadmaps={roadmaps} />
+            )}
+          </div>
         </SidebarContent>
         <div className="fixed left-4 top-4">
           <SidebarTrigger className="shadow-none bg-white text-black hover:bg-white/90" />
         </div>
       </div>
     </div>
+  );
+};
+
+const RoadmapList = ({ roadmaps }: { roadmaps: Roadmap[] }) => {
+  const pathname = usePathname();
+
+  return (
+    <ul className="flex flex-col gap-2 mt-20">
+      {roadmaps.map((roadmap) => (
+        <li key={roadmap.id}>
+          <Link
+            href={`/dashboard/${roadmap.id}`}
+            className={cn(
+              "hover:bg-gray-100 p-2 rounded-md cursor-pointer text-sm truncate block",
+              pathname === `/dashboard/${roadmap.id}` && "bg-gray-100"
+            )}
+          >
+            {roadmap.prompt}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 };
 

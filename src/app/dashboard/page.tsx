@@ -19,10 +19,11 @@ import { Suspense, useEffect, useState } from "react";
 import Stages from "@/components/stages";
 import { authClient } from "@/lib/auth-client";
 import { FinalQuiz, RoadmapStage, RoadmapData } from "@/types/roadmap";
+import { transformRoadmap } from "@/lib/transform";
 
 // API functions
 async function generateRoadmap(prompt: string): Promise<RoadmapData> {
-  const response = await fetch("/api/generate-roadmap", {
+  const response = await fetch("/api/roadmap/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),
@@ -41,14 +42,12 @@ const DashboardPage = () => {
   const { data: session, isPending: isSessionLoading } =
     authClient.useSession();
   const prompt = searchParams.get("prompt");
-  const roadmapId = searchParams.get("roadmapId");
 
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
   const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
   const [roadmapStages, setRoadmapStages] = useState<RoadmapStage[]>([]);
 
-  // TanStack Query mutation for roadmap generation
   const {
     mutate: generateRoadmapMutation,
     isPending: isGenerating,
@@ -56,33 +55,16 @@ const DashboardPage = () => {
   } = useMutation({
     mutationFn: (prompt: string) => generateRoadmap(prompt),
     onSuccess: (data: RoadmapData) => {
-      console.log(data);
-
-      if (data.roadmap) {
-        const stages = data.roadmap;
-
-        const transformedRoadmap = stages.map(
-          (stage: RoadmapStage, index: number) => ({
-            ...stage,
-            isUnlocked: index === 0, // Only first stage is unlocked
-            isCompleted: false,
-            icon:
-              [Zap, Brain, Sparkles, Star, Trophy, Brain][index % 6] || Brain, // Use modulo to handle more than 6 stages
-          })
-        );
-
-        setRoadmapStages(transformedRoadmap);
-      }
+      const transformedRoadmap = transformRoadmap(data);
+      setRoadmapStages(transformedRoadmap.roadmap as RoadmapStage[]);
     },
     onError: (error: any) => {
       console.error("Error generating roadmap:", error);
-      // Fallback to mock data on error
       setRoadmapStages(mockTrigonometryRoadmap);
       setFinalQuiz(mockFinalQuiz);
     },
   });
 
-  // Start roadmap generation when prompt is available
   useEffect(() => {
     if (prompt) {
       generateRoadmapMutation(prompt);

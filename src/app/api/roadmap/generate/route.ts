@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { findSimilarRoadmaps, storeRoadmap } from "@/lib/vector-db";
-import { auth } from "@/lib/auth";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextRequest, NextResponse } from "next/server";
 
 interface RoadmapStage {
   id: string;
@@ -415,7 +414,7 @@ export async function GET() {
   return NextResponse.json({
     message: "Roadmap generation API is running",
     endpoints: {
-      POST: "/api/generate-roadmap - Generate a new roadmap from a prompt",
+      POST: "/api/roadmap/generate - Generate a new roadmap from a prompt",
     },
   });
 }
