@@ -91,12 +91,12 @@ Create a roadmap with exactly this JSON structure:
 
 Requirements:
 1. Create min 6 and maximum 10 stages that build upon each other
-2. Each stage should have 3 lessons, rich materials with actual content, and 2 quiz questions with explanations
+2. Each stage should have 3 lessons, rich materials with actual content, and a 5 min and 10 max quiz questions with explanations
 3. Position stages in a path: stage 1 at (2,0), stage 2 at (1,1), stage 3 at (3,1), stage 4 at (2,2), stage 5 at (1,3), stage 6 at (3,3)
 4. Use these colors in order: "from-green-400 to-emerald-500", "from-blue-400 to-cyan-500", "from-purple-400 to-pink-500", "from-orange-400 to-red-500", "from-indigo-400 to-purple-500", "from-yellow-400 to-orange-500"
 5. Include actual educational content in text materials (200+ words each)
-6. Suggest real YouTube video URLs when possible
-7. Use random image URLs from picsum.photos with different random numbers
+6. Suggest real YouTube video URLs when possible and they should exist otherwise leave it empty
+7. Use random image URLs from picsum.photos with different random numbers with context to the lesson
 8. Create a final quiz with 10 comprehensive questions
 9. Ensure logical progression from beginner to advanced concepts
 
