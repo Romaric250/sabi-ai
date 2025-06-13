@@ -22,11 +22,13 @@ const DashboardSidebar = ({}: DashboardSidebarProps) => {
 
   return (
     <div className="fixed top-0 left-0 h-screen z-50 flex">
-      <div className="relative">
-        <SidebarContent className="bg-white">
-          <div className="p-4">
+      <div className="relative h-full">
+        <SidebarContent className="bg-white h-full">
+          <div className="p-4 h-full">
             {isLoading ? (
-              <div>Loading...</div>
+              <div className="text-center text-sm text-gray-500 h-full flex items-center justify-center">
+                Loading...
+              </div>
             ) : (
               <RoadmapList roadmaps={roadmaps} />
             )}
