@@ -11,18 +11,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { signInSchema } from "@/lib/verification";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import Link from "next/link";
-import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { ErrorContext } from "@better-fetch/fetch";
-import { GithubIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorContext } from "@better-fetch/fetch";
+import { toast } from "sonner";
 
 export default function SignIn() {
   const router = useRouter();
@@ -51,6 +51,7 @@ export default function SignIn() {
         },
         onSuccess: async () => {
           router.push("/");
+          toast.success("Signed in successfully");
           router.refresh();
         },
         onError: (ctx: ErrorContext) => {
@@ -61,24 +62,24 @@ export default function SignIn() {
     setPendingCredentials(false);
   };
 
-  const handleSignInWithGithub = async () => {
-    await authClient.signIn.social(
-      {
-        provider: "github",
-      },
-      {
-        onRequest: () => {
-          setPendingGithub(true);
-        },
-        onSuccess: async () => {
-          router.push("/");
-          router.refresh();
-        },
-        onError: (ctx: ErrorContext) => {},
-      }
-    );
-    setPendingGithub(false);
-  };
+  // const handleSignInWithGithub = async () => {
+  //   await authClient.signIn.social(
+  //     {
+  //       provider: "github",
+  //     },
+  //     {
+  //       onRequest: () => {
+  //         setPendingGithub(true);
+  //       },
+  //       onSuccess: async () => {
+  //         router.push("/");
+  //         router.refresh();
+  //       },
+  //       onError: (ctx: ErrorContext) => {},
+  //     }
+  //   );
+  //   setPendingGithub(false);
+  // };
 
   return (
     <div className="grow flex items-center justify-center p-4 w-full">
@@ -119,21 +120,24 @@ export default function SignIn() {
                   )}
                 />
               ))}
-              <Button disabled={pendingCredentials}>Sign in</Button>
+              <Button disabled={pendingCredentials} className="w-full">
+                Sign in
+              </Button>
             </form>
           </Form>
-          <div className="mt-4">
-            <Button disabled={pendingGithub} onClick={handleSignInWithGithub}>
-              <GithubIcon className="w-4 h-4 mr-2" />
-              Continue with GitHub
-            </Button>
-          </div>
-          <div className="mt-4 text-center text-sm">
-            <Link
+
+          <div className="mt-4 text-center text-sm flex items-center justify-center gap-2">
+            {/* <Link
               href="/forgot-password"
               className="text-primary hover:underline"
             >
               Forgot password?
+            </Link> */}
+            <span className="text-sm text-gray-500">
+              Don&apos;t have an account?
+            </span>
+            <Link href="/auth/sign-up" className="text-primary hover:underline">
+              Sign up
             </Link>
           </div>
         </CardContent>

@@ -86,6 +86,7 @@ export function HeroSection() {
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    router.push("/auth/sign-in");
   };
 
   return (
@@ -100,10 +101,7 @@ export function HeroSection() {
           transition={{ duration: 0.8 }}
           className="flex items-center gap-3"
         >
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <Brain className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold text-primary">lewa</span>
+          <span className="text-2xl font-bold text-primary">sabi</span>
         </motion.div>
 
         <motion.div

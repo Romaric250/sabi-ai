@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { toast } from "sonner";
 
 export default function SignUp() {
   const [pending, setPending] = useState(false);
@@ -46,11 +47,11 @@ export default function SignUp() {
           setPending(true);
         },
         onSuccess: () => {
-          alert("Account created");
+          toast.success("Account created successfully, check your email");
         },
         onError: (ctx) => {
           console.log("error", ctx);
-          alert("Something went wrong");
+          toast.error("Something went wrong");
         },
       }
     );
@@ -97,11 +98,13 @@ export default function SignUp() {
                   )}
                 />
               ))}
-              <Button disabled={pending}>Sign up</Button>
+              <Button disabled={pending} className="w-full">
+                Sign up
+              </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            <Link href="/sign-in" className="text-primary hover:underline">
+            <Link href="/auth/sign-in" className="text-primary hover:underline">
               Already have an account? Sign in
             </Link>
           </div>
