@@ -2,11 +2,19 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Navigation } from "@/components/landing/Navigation";
+import { AuthModal } from "@/components/AuthModal";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [prompt, setPrompt] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -104,9 +112,65 @@ export default function Home() {
       canvas.height = window.innerHeight;
     };
 
-    window.addEventListener('resize', handleResize);
+        window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await authClient.getSession();
+        setIsAuthenticated(!!session);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Handle roadmap generation
+  const handleGenerateRoadmap = async () => {
+    if (!prompt.trim()) return;
+
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/roadmap/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: prompt.trim() }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to dashboard with the generated roadmap
+        router.push(`/dashboard/${data.roadmapId}`);
+      } else {
+        throw new Error('Failed to generate roadmap');
+      }
+    } catch (error) {
+      console.error('Error generating roadmap:', error);
+      alert('Failed to generate roadmap. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+    setShowAuthModal(false);
+    // Retry roadmap generation if there was a prompt
+    if (prompt.trim()) {
+      handleGenerateRoadmap();
+    }
+  };
 
   return (
     <main className="min-h-screen bg-black text-white overflow-hidden relative">
@@ -180,16 +244,64 @@ export default function Home() {
                 evolves, and accelerates your journey to mastery.
               </p>
               
+              {/* Interactive Text Area */}
+              <div className="relative max-w-2xl mx-auto mb-16">
+                <div className="relative">
+                  {/* Text area container */}
+                  <div className="relative bg-black/50 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                    <textarea
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      className="w-full bg-transparent text-white outline-none text-lg resize-none"
+                      rows={3}
+                      placeholder="Ask me anything..."
+                      id="hero-textarea"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleGenerateRoadmap();
+                        }
+                      }}
+                    />
+                    
+                    {/* Send button */}
+                    <button 
+                      onClick={handleGenerateRoadmap}
+                      disabled={isGenerating || !prompt.trim()}
+                      className="absolute bottom-4 right-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                        {isGenerating ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
-                <button className="group relative px-8 py-4 bg-white text-black font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:scale-105">
-                  <span className="relative z-10">Start Your Journey</span>
+                <button 
+                  onClick={() => router.push('/dashboard')}
+                  className="group relative px-8 py-4 bg-white text-black font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:scale-105"
+                >
+                  <span className="relative z-10">Go to Dashboard</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </button>
                 
-                <button className="group relative px-8 py-4 border border-white/30 text-white font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:bg-white/10">
-                  <span className="relative z-10">Watch Demo</span>
-                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </button>
+                {!isAuthenticated && (
+                  <button 
+                    onClick={() => setShowAuthModal(true)}
+                    className="group relative px-8 py-4 border border-white/30 text-white font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:bg-white/10"
+                  >
+                    <span className="relative z-10">Sign In</span>
+                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </button>
+                )}
               </div>
               
               {/* Floating Stats */}
@@ -428,15 +540,23 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <button className="group relative px-12 py-6 bg-white text-black font-bold text-lg rounded-xl overflow-hidden transition-all duration-300 hover:scale-105">
-                <span className="relative z-10">Launch Your Future</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </button>
-              
-              <button className="group relative px-12 py-6 border border-white/30 text-white font-bold text-lg rounded-xl overflow-hidden transition-all duration-300 hover:bg-white/10">
-                <span className="relative z-10">Watch Demo</span>
+                          <button 
+              onClick={() => router.push('/dashboard')}
+              className="group relative px-12 py-6 bg-white text-black font-bold text-lg rounded-xl overflow-hidden transition-all duration-300 hover:scale-105"
+            >
+              <span className="relative z-10">Launch Your Future</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
+            
+            {!isAuthenticated && (
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="group relative px-12 py-6 border border-white/30 text-white font-bold text-lg rounded-xl overflow-hidden transition-all duration-300 hover:bg-white/10"
+              >
+                <span className="relative z-10">Get Started</span>
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
+            )}
             </div>
           </div>
         </div>
@@ -449,6 +569,13 @@ export default function Home() {
           50% { transform: translateY(-20px) rotate(180deg); }
         }
       `}</style>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </main>
   );
 }

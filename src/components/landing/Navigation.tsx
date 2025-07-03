@@ -98,7 +98,6 @@ export function Navigation() {
             {[
               { name: "Features", href: "#features" },
               { name: "Technology", href: "#tech" },
-              { name: "Pricing", href: "#pricing" },
             ].map((item, i) => (
               <a
                 key={item.name}
@@ -119,8 +118,11 @@ export function Navigation() {
             ))}
             
             {/* CTA Button */}
-            <button className="group relative px-6 py-3 bg-white text-black font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:scale-105">
-              <span className="relative z-10">Get Started</span>
+            <button 
+              onClick={() => window.location.href = '/dashboard'}
+              className="group relative px-6 py-3 bg-white text-black font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:scale-105"
+            >
+              <span className="relative z-10">Dashboard</span>
               
               {/* Animated background */}
               <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -157,7 +159,6 @@ export function Navigation() {
               {[
                 { name: "Features", href: "#features" },
                 { name: "Technology", href: "#tech" },
-                { name: "Pricing", href: "#pricing" },
               ].map((item) => (
                 <a
                   key={item.name}
