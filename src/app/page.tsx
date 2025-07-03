@@ -5,6 +5,7 @@ import { Navigation } from "@/components/landing/Navigation";
 import { AuthModal } from "@/components/AuthModal";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import Footer from "@/components/landing/Footer";
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -576,6 +577,9 @@ export default function Home() {
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />
+
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }
