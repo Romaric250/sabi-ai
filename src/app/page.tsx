@@ -151,8 +151,18 @@ export default function Home() {
 
       if (response.ok) {
         const data = await response.json();
-        // Redirect to dashboard with the generated roadmap
-        router.push(`/dashboard/${data.roadmapId}`);
+        console.log('Roadmap generation response:', data);
+        
+        // If we have a roadmap, redirect to dashboard
+        if (data.success) {
+          if (data.roadmapId) {
+            router.push(`/dashboard/${data.roadmapId}`);
+          } else {
+            router.push('/dashboard');
+          }
+        } else {
+          throw new Error('Failed to generate roadmap');
+        }
       } else {
         throw new Error('Failed to generate roadmap');
       }

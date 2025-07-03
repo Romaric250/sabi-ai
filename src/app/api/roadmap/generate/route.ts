@@ -1,6 +1,7 @@
 import { findSimilarRoadmaps, storeRoadmap } from "@/lib/vector-db";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 interface RoadmapStage {
   id: string;
@@ -359,6 +360,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user session
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     console.log("Searching for similar roadmap for prompt:", prompt);
     const similarRoadmaps = await findSimilarRoadmaps(prompt);
 
@@ -388,19 +398,28 @@ export async function POST(request: NextRequest) {
     const roadmap = await generateRoadmapWithAI(prompt);
 
     try {
-      await storeRoadmap(prompt, roadmap);
-      console.log("Successfully stored roadmap in vector database");
+      const roadmapId = await storeRoadmap(prompt, roadmap);
+      console.log("Successfully stored roadmap in vector database with ID:", roadmapId);
+      
+      return NextResponse.json({
+        success: true,
+        roadmap,
+        roadmapId,
+        prompt,
+        cached: false,
+        message: "Generated new roadmap",
+      });
     } catch (storeError) {
       console.error("Failed to store roadmap in vector database:", storeError);
+      
+      return NextResponse.json({
+        success: true,
+        roadmap,
+        prompt,
+        cached: false,
+        message: "Generated new roadmap (not cached)",
+      });
     }
-
-    return NextResponse.json({
-      success: true,
-      roadmap,
-      prompt,
-      cached: false,
-      message: "Generated new roadmap",
-    });
   } catch (error) {
     console.error("Error generating roadmap:", error);
     return NextResponse.json(

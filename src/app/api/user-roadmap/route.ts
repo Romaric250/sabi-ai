@@ -68,37 +68,28 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user from session
-    const token = request.cookies.get("session-token")?.value;
-    if (!token) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const session = await auth.api.getSession({ headers: request.headers });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const sessionData = await auth.api.getSession({
-      headers: request.headers,
-    });
-    if (!sessionData) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
-    const userId = sessionData.user.id;
-
-    // Get all user roadmaps
-    const userRoadmaps = await prisma.userRoadmap.findMany({
-      where: { userId },
-      include: {
-        roadmap: true,
+    const sessionUserId = session.user.id;
+    
+    const roadmaps = await prisma.roadmap.findMany({
+      where: {
+        userId: sessionUserId,
       },
       orderBy: {
-        updatedAt: "desc",
+        createdAt: 'desc',
       },
     });
 
-    return NextResponse.json(userRoadmaps);
+    return NextResponse.json(roadmaps);
   } catch (error) {
-    console.error("Error fetching user roadmaps:", error);
+    console.error("Error fetching roadmaps:", error);
     return NextResponse.json(
-      { error: "Failed to fetch user roadmaps" },
+      { error: "Failed to fetch roadmaps" },
       { status: 500 }
     );
   }
