@@ -5,6 +5,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { getSessionCookie } from "better-auth/cookies";
 import { Bell, User } from "lucide-react";
 import Link from "next/link";
 
@@ -12,8 +13,9 @@ const SIDEBAR_WIDTH = 320; // px
 const TOPBAR_HEIGHT = 64; // px (approx 4rem)
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
+  const headersList = await headers();
   const session = await auth.api.getSession({
-    headers: await headers(),``
+    headers: headersList,
   });
 
   if (!session) {
