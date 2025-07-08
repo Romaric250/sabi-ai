@@ -1,41 +1,103 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { User, BookOpen, Target, CheckCircle } from "lucide-react";
+import RoadmapFlow from "@/components/RoadmapFlow";
+import { StageModal } from "@/components/StageModal";
+import { RoadmapStage } from "@/types/roadmap";
 
-export default async function DashboardRoadmapPage({ params }: { params: { id: string } }) {
-  const roadmap = await prisma.roadmap.findUnique({
-    where: { id: params.id },
-  });
-  
-  if (!roadmap) return notFound();
+export default function DashboardRoadmapPage({ params }: { params: { id: string } }) {
+  const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [roadmap, setRoadmap] = useState<any>(null);
+  const [transformedStages, setTransformedStages] = useState<RoadmapStage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Parse the roadmap content to get stages
-  const roadmapData = roadmap.content as any;
-  
-  // Handle different possible data structures
-  let stages: any[] = [];
-  if (Array.isArray(roadmapData)) {
-    // If content is directly an array of stages
-    stages = roadmapData;
-  } else if (roadmapData && typeof roadmapData === 'object') {
-    // Check if it's an object with numeric keys (array-like object)
-    const keys = Object.keys(roadmapData);
-    if (keys.every(key => !isNaN(Number(key)))) {
-      // Convert object with numeric keys to array
-      stages = Object.values(roadmapData);
-    } else if (roadmapData?.roadmap && Array.isArray(roadmapData.roadmap)) {
-      // If content has a roadmap property with stages array
-      stages = roadmapData.roadmap;
-    } else if (roadmapData?.stages && Array.isArray(roadmapData.stages)) {
-      // If content has a stages property
-      stages = roadmapData.stages;
-    }
+  // Fetch roadmap data
+  useEffect(() => {
+    const fetchRoadmap = async () => {
+      try {
+        const response = await fetch(`/api/roadmap/${params.id}`);
+        if (response.ok) {
+          const roadmapData = await response.json();
+          setRoadmap(roadmapData);
+          
+          // Parse the roadmap content to get stages
+          const roadmapContent = roadmapData.content as any;
+          
+          // Handle different possible data structures
+          let stages: any[] = [];
+          if (Array.isArray(roadmapContent)) {
+            stages = roadmapContent;
+          } else if (roadmapContent && typeof roadmapContent === 'object') {
+            const keys = Object.keys(roadmapContent);
+            if (keys.every(key => !isNaN(Number(key)))) {
+              stages = Object.values(roadmapContent);
+            } else if (roadmapContent?.roadmap && Array.isArray(roadmapContent.roadmap)) {
+              stages = roadmapContent.roadmap;
+            } else if (roadmapContent?.stages && Array.isArray(roadmapContent.stages)) {
+              stages = roadmapContent.stages;
+            }
+          }
+          
+          // Transform stages to include proper position data and unlock status
+          const transformed = stages.map((stage: any, index: number) => ({
+            ...stage,
+            isUnlocked: index === 0 || stage.isUnlocked || false,
+            isCompleted: stage.isCompleted || false,
+            position: stage.position || { x: index * 2, y: index },
+          }));
+          
+          setTransformedStages(transformed);
+        }
+      } catch (error) {
+        console.error("Error fetching roadmap:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoadmap();
+  }, [params.id]);
+
+  const handleStageClick = (stage: RoadmapStage) => {
+    setSelectedStage(stage);
+    setIsModalOpen(true);
+  };
+
+  const handleStageComplete = (stageId: string) => {
+    setTransformedStages(prev => 
+      prev.map(stage => {
+        if (stage.id === stageId) {
+          return { ...stage, isCompleted: true };
+        }
+        // Unlock next stage
+        if (stage.id === String(parseInt(stageId) + 1)) {
+          return { ...stage, isUnlocked: true };
+        }
+        return stage;
+      })
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+      </div>
+    );
   }
-  
+
+  if (!roadmap) {
+    return notFound();
+  }
+
   // Calculate progress based on completed stages
-  const completedStages = stages.filter((stage: any) => stage.isCompleted).length;
-  const progress = stages.length > 0 ? Math.round((completedStages / stages.length) * 100) : 0;
+  const completedStages = transformedStages.filter((stage: any) => stage.isCompleted).length;
+  const progress = transformedStages.length > 0 ? Math.round((completedStages / transformedStages.length) * 100) : 0;
 
   return (
     <div className="space-y-8">
@@ -64,73 +126,40 @@ export default async function DashboardRoadmapPage({ params }: { params: { id: s
             />
           </div>
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>{completedStages} of {stages.length} stages completed</span>
-            <span>{stages.length - completedStages} remaining</span>
+            <span>{completedStages} of {transformedStages.length} stages completed</span>
+            <span>{transformedStages.length - completedStages} remaining</span>
           </div>
         </div>
       </div>
 
-      {/* Stages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stages.map((stage: any, index: number) => (
-          <div
-            key={stage.id || index}
-            className={`bg-white/60 backdrop-blur-sm border rounded-xl p-6 transition-all duration-200 ${
-              stage.isCompleted 
-                ? 'border-green-200/50 bg-green-50/30' 
-                : stage.isUnlocked 
-                ? 'border-gray-200/50 hover:border-gray-300/50 hover:shadow-md' 
-                : 'border-gray-100/50 bg-gray-50/30'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  stage.isCompleted 
-                    ? 'bg-green-500' 
-                    : stage.isUnlocked 
-                    ? 'bg-black' 
-                    : 'bg-gray-300'
-                }`}>
-                  {stage.isCompleted ? (
-                    <CheckCircle className="w-4 h-4 text-white" />
-                  ) : (
-                    <span className="text-white font-medium text-sm">{index + 1}</span>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-black">{stage.title}</h3>
-                  <p className="text-xs text-gray-500">{stage.lessons?.length || 0} lessons</p>
-                </div>
-              </div>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-              {stage.description}
-            </p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-xs text-gray-500">
-                <Target className="w-3 h-3" />
-                <span>Stage {index + 1}</span>
-              </div>
-              
-              {stage.isCompleted ? (
-                <span className="text-xs font-medium text-green-600">Completed</span>
-              ) : stage.isUnlocked ? (
-                <button className="text-xs font-medium text-black hover:text-gray-700 transition-colors">
-                  Start →
-                </button>
-              ) : (
-                <span className="text-xs text-gray-400">Locked</span>
-              )}
-            </div>
-          </div>
-        ))}
+      {/* ReactFlow Roadmap */}
+      <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-black mb-2">Learning Path</h2>
+          <p className="text-sm text-gray-600">
+            Click on unlocked stages to start learning. Use the controls to zoom and navigate.
+          </p>
+        </div>
+        
+        <RoadmapFlow 
+          stages={transformedStages}
+          onStageClick={handleStageClick}
+        />
       </div>
 
+      {/* Stage Modal */}
+      <StageModal
+        stage={selectedStage}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedStage(null);
+        }}
+        onComplete={handleStageComplete}
+      />
+
       {/* Empty State */}
-      {stages.length === 0 && (
+      {transformedStages.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-black mb-2">No stages available</h3>
