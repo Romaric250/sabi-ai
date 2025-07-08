@@ -1,377 +1,157 @@
 "use client";
 
-import { FinalQuizModal } from "@/components/FinalQuizModal";
-import { StageSheet } from "@/components/StageSheet";
-import { useMutation } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Loader, Sparkles, Star, Trophy, Zap, User } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { useSession } from "@/components/session";
+import { Suspense } from "react";
+import { BookOpen, Sparkles, Target, TrendingUp, Clock, CheckCircle } from "lucide-react";
 
-import Stages from "@/components/stages";
-import { transformRoadmap } from "@/lib/transform";
-import { FinalQuiz, RoadmapData, RoadmapStage } from "@/types/roadmap";
-
-// API functions
-async function generateRoadmap(prompt: string): Promise<RoadmapData> {
-  const response = await fetch("/api/roadmap/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-const DashboardPage = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const prompt = searchParams.get("prompt");
-  const { user } = useSession();
-  const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
-  const [showFinalQuiz, setShowFinalQuiz] = useState(false);
-  const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
-  const [roadmapStages, setRoadmapStages] = useState<RoadmapStage[]>([]);
-  const [showFabMenu, setShowFabMenu] = useState(false);
-
-  const {
-    mutate: generateRoadmapMutation,
-    isPending: isGenerating,
-    error: generationError,
-  } = useMutation({
-    mutationFn: (prompt: string) => generateRoadmap(prompt),
-    onSuccess: (data: RoadmapData) => {
-      const transformedRoadmap = transformRoadmap(data);
-      setRoadmapStages(transformedRoadmap.roadmap as RoadmapStage[]);
-    },
-    onError: (error: any) => {
-      console.error("Error generating roadmap:", error);
-      setRoadmapStages(mockTrigonometryRoadmap);
-      setFinalQuiz(mockFinalQuiz);
-    },
-  });
-
-  useEffect(() => {
-    if (prompt) {
-      generateRoadmapMutation(prompt);
-    }
-  }, [prompt, generateRoadmapMutation]);
-
-  const mockFinalQuiz: FinalQuiz = {
-    title: "Final Assessment: Trigonometry Mastery",
-    description: "Comprehensive test covering all trigonometry concepts",
-    questions: [
-      {
-        question: "What is the value of sin(30°)?",
-        options: ["1/2", "√3/2", "√2/2", "1"],
-        correct: 0,
-        explanation:
-          "sin(30°) = 1/2. This is a fundamental trigonometric value.",
-        stage: "Sine Function",
-      },
-      {
-        question:
-          "Which identity represents the Pythagorean theorem in trigonometry?",
-        options: [
-          "sin²θ + cos²θ = 1",
-          "tan²θ + 1 = sec²θ",
-          "sin(2θ) = 2sin(θ)cos(θ)",
-          "cos(θ) = sin(90° - θ)",
-        ],
-        correct: 0,
-        explanation:
-          "sin²θ + cos²θ = 1 is the fundamental Pythagorean identity.",
-        stage: "Trig Identities",
-      },
-      {
-        question: "In which field is trigonometry NOT commonly used?",
-        options: ["Navigation", "Engineering", "Cooking", "Physics"],
-        correct: 2,
-        explanation:
-          "While trigonometry has many applications, it's not commonly used in cooking.",
-        stage: "Applications",
-      },
-      {
-        question: "What is tan(45°)?",
-        options: ["0", "1", "√3", "undefined"],
-        correct: 1,
-        explanation: "tan(45°) = 1, as sin(45°) = cos(45°) = √2/2.",
-        stage: "Tangent Function",
-      },
-      {
-        question: "How many radians are in a full circle?",
-        options: ["π", "2π", "π/2", "4π"],
-        correct: 1,
-        explanation: "A full circle contains 2π radians, equivalent to 360°.",
-        stage: "Basic Angles",
-      },
-    ],
-    passingScore: 80,
-    timeLimit: 15,
-  };
-
-  const mockTrigonometryRoadmap: RoadmapStage[] = [
-    {
-      id: "1",
-      title: "Basic Angles",
-      description: "Understanding degrees, radians, and angle measurement",
-      lessons: [
-        "What are angles?",
-        "Degrees vs Radians",
-        "Unit Circle Introduction",
-      ],
-      materials: [
-        "Interactive Angle Visualizer",
-        "Degree-Radian Converter",
-        "Practice Worksheets",
-      ],
-      quiz: [
-        {
-          question: "How many degrees are in a full circle?",
-          options: ["180°", "270°", "360°", "90°"],
-          correct: 2,
-        },
-        {
-          question: "What is π radians in degrees?",
-          options: ["90°", "180°", "270°", "360°"],
-          correct: 1,
-        },
-      ],
-      isUnlocked: true,
-      isCompleted: false,
-      position: { x: 2, y: 0 },
-      color: "from-green-400 to-emerald-500",
-      icon: Zap,
-    },
-    {
-      id: "2",
-      title: "Sine Function",
-      description: "Master the sine function and its properties",
-      lessons: [
-        "Definition of Sine",
-        "Sine Wave Properties",
-        "Sine in Right Triangles",
-      ],
-      materials: [
-        "Sine Wave Simulator",
-        "Triangle Calculator",
-        "Graphing Tool",
-      ],
-      quiz: [
-        {
-          question: "What is sin(90°)?",
-          options: ["0", "1", "-1", "0.5"],
-          correct: 1,
-        },
-      ],
-      isUnlocked: false,
-      isCompleted: false,
-      position: { x: 1, y: 1 },
-      color: "from-blue-400 to-cyan-500",
-      icon: Brain,
-    },
-    {
-      id: "3",
-      title: "Cosine Function",
-      description: "Explore cosine and its relationship to sine",
-      lessons: [
-        "Definition of Cosine",
-        "Cosine Wave Properties",
-        "Cosine in Right Triangles",
-      ],
-      materials: [
-        "Cosine Wave Simulator",
-        "Comparison Tool",
-        "Practice Problems",
-      ],
-      quiz: [
-        {
-          question: "What is cos(0°)?",
-          options: ["0", "1", "-1", "0.5"],
-          correct: 1,
-        },
-      ],
-      isUnlocked: false,
-      isCompleted: false,
-      position: { x: 3, y: 1 },
-      color: "from-purple-400 to-pink-500",
-      icon: Sparkles,
-    },
-    {
-      id: "4",
-      title: "Tangent Function",
-      description: "Understanding tangent and its applications",
-      lessons: [
-        "Definition of Tangent",
-        "Tangent Properties",
-        "Tangent in Problem Solving",
-      ],
-      materials: [
-        "Tangent Visualizer",
-        "Slope Calculator",
-        "Real-world Examples",
-      ],
-      quiz: [
-        {
-          question: "What is tan(45°)?",
-          options: ["0", "1", "-1", "√3"],
-          correct: 1,
-        },
-      ],
-      isUnlocked: false,
-      isCompleted: false,
-      position: { x: 2, y: 2 },
-      color: "from-orange-400 to-red-500",
-      icon: Star,
-    },
-    {
-      id: "5",
-      title: "Trig Identities",
-      description: "Master fundamental trigonometric identities",
-      lessons: [
-        "Pythagorean Identity",
-        "Sum and Difference Formulas",
-        "Double Angle Formulas",
-      ],
-      materials: [
-        "Identity Proof Tool",
-        "Formula Reference",
-        "Practice Generator",
-      ],
-      quiz: [
-        {
-          question: "What is sin²θ + cos²θ equal to?",
-          options: ["0", "1", "tan²θ", "2"],
-          correct: 1,
-        },
-      ],
-      isUnlocked: false,
-      isCompleted: false,
-      position: { x: 1, y: 3 },
-      color: "from-indigo-400 to-purple-500",
-      icon: Trophy,
-    },
-    {
-      id: "6",
-      title: "Applications",
-      description: "Real-world applications of trigonometry",
-      lessons: [
-        "Physics Applications",
-        "Engineering Uses",
-        "Navigation and GPS",
-      ],
-      materials: ["Simulation Tools", "Case Studies", "Project Ideas"],
-      quiz: [
-        {
-          question: "Trigonometry is used in which field?",
-          options: ["Physics", "Engineering", "Navigation", "All of the above"],
-          correct: 3,
-        },
-      ],
-      isUnlocked: false,
-      isCompleted: false,
-      position: { x: 3, y: 3 },
-      color: "from-yellow-400 to-orange-500",
-      icon: Brain,
-    },
-  ];
-
-  const handleStageClick = (stage: RoadmapStage) => {
-    if (stage.isUnlocked) {
-      setSelectedStage(stage);
-    }
-  };
-
-  const handleFinalQuizClick = () => {
-    const allCompleted = roadmapStages.every((stage) => stage.isCompleted);
-    if (allCompleted) {
-      setFinalQuiz(mockFinalQuiz);
-      setShowFinalQuiz(true);
-    } else {
-      alert("Complete all stages before taking the final quiz!");
-    }
-  };
-
-  const handleStageComplete = (stageId: string) => {
-    setRoadmapStages((prev) =>
-      prev.map((stage) => {
-        if (stage.id === stageId) {
-          return { ...stage, isCompleted: true };
-        }
-
-        if (stage.id === String(parseInt(stageId) + 1)) {
-          return { ...stage, isUnlocked: true };
-        }
-        return stage;
-      })
-    );
-    setSelectedStage(null);
-
-    // Show success message
-    console.log(`Stage ${stageId} completed! Next stage unlocked.`);
-  };
-
-  const handleFinalQuizComplete = (score: number, passed: boolean) => {
-    setShowFinalQuiz(false);
-    if (passed) {
-      alert(`Congratulations! You scored ${score}% and completed the course!`);
-    } else {
-      alert(`You scored ${score}%. Review the materials and try again!`);
-    }
-  };
-
-  if (isGenerating) {
-    return (
-      <div className="min-h-screen py-20">
-        <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-          <motion.div className="mx-auto w-full flex items-center justify-center gap-2">
-            <Loader className="size-10 animate-spin text-primary" />
-            <span className="text-xl font-bold">Cooking Your Journey</span>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
-  if (generationError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">
-            Error Generating Roadmap
-          </h2>
-          <p className="text-gray-400">
-            {generationError instanceof Error
-              ? generationError.message
-              : "An unexpected error occurred"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+export default function DashboardPage() {
   return (
-    <div className="relative w-full h-full min-h-[80vh] flex items-center justify-center">
-      <div className="absolute inset-0 w-full h-full backdrop-blur-md bg-white/40 z-0" />
-      <div className="relative z-10 flex flex-col items-center justify-center w-full">
-        <h2 className="text-2xl md:text-3xl font-bold text-black/80 mb-4 text-center">Select a roadmap from the sidebar or generate a new one</h2>
-        <p className="text-lg text-black/60 text-center max-w-xl">Your personalized learning journey starts here. Use the + button to create a roadmap or pick one from the list.</p>
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="text-center py-12">
+        <div className="max-w-2xl mx-auto">
+          <div className="inline-flex items-center space-x-2 bg-black/5 px-4 py-2 rounded-full mb-6">
+            <Sparkles className="w-4 h-4 text-black" />
+            <span className="text-sm font-medium text-black">Welcome back!</span>
+          </div>
+          
+          <h1 className="text-4xl font-bold text-black mb-4">
+            Ready to continue learning?
+          </h1>
+          
+          <p className="text-lg text-gray-600 mb-8">
+            Pick up where you left off or start a new learning journey with AI-powered roadmaps.
+          </p>
+          
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+            <div className="flex items-center space-x-2">
+              <Target className="w-4 h-4" />
+              <span>Personalized paths</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="w-4 h-4" />
+              <span>Track progress</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4" />
+              <span>Complete goals</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6 hover:bg-white/80 hover:shadow-md transition-all duration-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Roadmaps</p>
+              <p className="text-2xl font-bold text-black">3</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6 hover:bg-white/80 hover:shadow-md transition-all duration-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Completed Stages</p>
+              <p className="text-2xl font-bold text-black">12</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6 hover:bg-white/80 hover:shadow-md transition-all duration-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Study Time</p>
+              <p className="text-2xl font-bold text-black">8.5h</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-black">Recent Activity</h2>
+          <button className="text-sm font-medium text-black hover:text-gray-700 transition-colors">
+            View all
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="flex items-center space-x-4 p-4 bg-gray-50/50 rounded-lg">
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-black">
+                Completed "React Fundamentals" stage
+              </p>
+              <p className="text-xs text-gray-500">2 hours ago</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4 p-4 bg-gray-50/50 rounded-lg">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-black">
+                Started new roadmap: "Python for Data Science"
+              </p>
+              <p className="text-xs text-gray-500">1 day ago</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4 p-4 bg-gray-50/50 rounded-lg">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+              <Target className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-black">
+                Achieved 75% progress in "Full-Stack Development"
+              </p>
+              <p className="text-xs text-gray-500">3 days ago</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Getting Started */}
+      <div className="bg-black/5 border border-black/10 rounded-xl p-8">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          
+          <h3 className="text-xl font-semibold text-black mb-2">
+            Ready to start learning?
+          </h3>
+          
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Create your first AI-powered learning roadmap and begin your journey to mastery.
+          </p>
+          
+          <div className="flex items-center justify-center space-x-4">
+            <button className="px-6 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200">
+              Create New Roadmap
+            </button>
+            
+            <button className="px-6 py-3 bg-white/80 text-black rounded-lg font-medium hover:bg-white border border-gray-200 transition-all duration-200">
+              Explore Templates
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-const Dashboard = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <DashboardPage />
-    </Suspense>
-  );
-};
-
-export default Dashboard;
+}
