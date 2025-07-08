@@ -49,19 +49,19 @@ const DashboardSidebar = ({}: DashboardSidebarProps) => {
   };
 
   return (
-    <div className="fixed top-0 left-0 h-screen z-50 flex">
+    <div className="fixed top-6 left-6 h-[92vh] z-50 flex">
       <div className="relative h-full">
-        <SidebarContent className="bg-white h-full">
-          <div className="p-4 h-full flex flex-col">
+        <SidebarContent className="backdrop-blur-xl bg-white/60 border border-white/20 shadow-2xl rounded-3xl h-full flex flex-col transition-all duration-300">
+          <div className="p-6 h-full flex flex-col">
             {/* Top bar with plus icon */}
-            <div className="flex items-center justify-between mb-6">
-              <span className="font-bold text-lg text-black">Your Roadmaps</span>
+            <div className="flex items-center justify-between mb-8">
+              <span className="font-bold text-xl text-black tracking-tight">Your Roadmaps</span>
               <button
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-black text-white hover:bg-gray-900 transition"
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-black text-white hover:scale-110 hover:bg-gray-900 transition-all duration-200 shadow-lg"
                 onClick={() => setShowModal(true)}
                 aria-label="Create new roadmap"
               >
-                <Plus size={20} />
+                <Plus size={22} />
               </button>
             </div>
             {isLoading ? (
@@ -73,8 +73,8 @@ const DashboardSidebar = ({}: DashboardSidebarProps) => {
             )}
           </div>
         </SidebarContent>
-        <div className="fixed left-4 top-4">
-          <SidebarTrigger className="shadow-none bg-white text-black hover:bg-white/90" />
+        <div className="fixed left-10 top-10">
+          <SidebarTrigger className="shadow-none bg-white/80 text-black hover:bg-white/90" />
         </div>
       </div>
       {/* Modal for creating new roadmap */}
@@ -150,8 +150,8 @@ const RoadmapList = ({ roadmaps }: { roadmaps: Roadmap[] }) => {
           <Link
             href={`/dashboard/${roadmap.id}`}
             className={cn(
-              "hover:bg-gray-100 p-2 rounded-md cursor-pointer text-sm truncate block",
-              pathname === `/dashboard/${roadmap.id}` && "bg-gray-100"
+              "hover:bg-black/10 p-2 rounded-xl cursor-pointer text-sm truncate block transition-all duration-200",
+              pathname === `/dashboard/${roadmap.id}` && "bg-black/10 border-l-4 border-black font-semibold scale-[1.03] shadow-md"
             )}
           >
             {roadmap.prompt}

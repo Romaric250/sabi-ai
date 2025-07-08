@@ -4,9 +4,10 @@ import { FinalQuizModal } from "@/components/FinalQuizModal";
 import { StageSheet } from "@/components/StageSheet";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Loader, Sparkles, Star, Trophy, Zap } from "lucide-react";
+import { Brain, Loader, Sparkles, Star, Trophy, Zap, User } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { useSession } from "@/components/session";
 
 import Stages from "@/components/stages";
 import { transformRoadmap } from "@/lib/transform";
@@ -31,11 +32,12 @@ const DashboardPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const prompt = searchParams.get("prompt");
-
+  const { user } = useSession();
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
   const [showFinalQuiz, setShowFinalQuiz] = useState(false);
   const [finalQuiz, setFinalQuiz] = useState<FinalQuiz | null>(null);
   const [roadmapStages, setRoadmapStages] = useState<RoadmapStage[]>([]);
+  const [showFabMenu, setShowFabMenu] = useState(false);
 
   const {
     mutate: generateRoadmapMutation,
@@ -354,29 +356,12 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden">
-      <div className="relative z-10 w-full h-screen">
-        <Stages stages={roadmapStages} onStageClick={handleStageClick} />
+    <div className="relative w-full h-full min-h-[80vh] flex items-center justify-center">
+      <div className="absolute inset-0 w-full h-full backdrop-blur-md bg-white/40 z-0" />
+      <div className="relative z-10 flex flex-col items-center justify-center w-full">
+        <h2 className="text-2xl md:text-3xl font-bold text-black/80 mb-4 text-center">Select a roadmap from the sidebar or generate a new one</h2>
+        <p className="text-lg text-black/60 text-center max-w-xl">Your personalized learning journey starts here. Use the + button to create a roadmap or pick one from the list.</p>
       </div>
-
-      {selectedStage && (
-        <StageSheet
-          stage={selectedStage}
-          isOpen={!!selectedStage}
-          onClose={() => setSelectedStage(null)}
-          onComplete={handleStageComplete}
-        />
-      )}
-
-      <AnimatePresence>
-        {showFinalQuiz && finalQuiz && (
-          <FinalQuizModal
-            finalQuiz={finalQuiz}
-            onClose={() => setShowFinalQuiz(false)}
-            onComplete={handleFinalQuizComplete}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

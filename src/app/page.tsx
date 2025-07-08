@@ -163,7 +163,7 @@ export default function Home() {
         } else {
           throw new Error('Failed to generate roadmap');
         }
-      } else {
+    } else {
         throw new Error('Failed to generate roadmap');
       }
     } catch (error) {
@@ -570,7 +570,7 @@ export default function Home() {
             )}
             </div>
           </div>
-        </div>
+    </div>
       </section>
 
       {/* Custom CSS for animations */}
