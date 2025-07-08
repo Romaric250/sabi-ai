@@ -108,10 +108,31 @@ export default function DashboardSidebar() {
   };
 
   const getProgressPercentage = (roadmap: Roadmap) => {
-    if (!roadmap.content?.stages) return 0;
-    const totalStages = roadmap.content.stages.length;
-    const completedStages = roadmap.content.stages.filter((stage: any) => stage.completed).length;
-    return totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
+    if (!roadmap.content) return 0;
+    
+    // Handle different possible data structures
+    let stages: any[] = [];
+    const content = roadmap.content as any;
+    
+    if (Array.isArray(content)) {
+      stages = content;
+    } else if (content && typeof content === 'object') {
+      // Check if it's an object with numeric keys (array-like object)
+      const keys = Object.keys(content);
+      if (keys.every(key => !isNaN(Number(key)))) {
+        // Convert object with numeric keys to array
+        stages = Object.values(content);
+      } else if (content?.roadmap && Array.isArray(content.roadmap)) {
+        stages = content.roadmap;
+      } else if (content?.stages && Array.isArray(content.stages)) {
+        stages = content.stages;
+      }
+    }
+    
+    if (stages.length === 0) return 0;
+    
+    const completedStages = stages.filter((stage: any) => stage.isCompleted).length;
+    return Math.round((completedStages / stages.length) * 100);
   };
 
   return (
