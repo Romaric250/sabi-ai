@@ -411,14 +411,14 @@ export async function POST(request: NextRequest) {
       });
     } catch (storeError) {
       console.error("Failed to store roadmap in vector database:", storeError);
-      
-      return NextResponse.json({
-        success: true,
-        roadmap,
-        prompt,
-        cached: false,
+
+    return NextResponse.json({
+      success: true,
+      roadmap,
+      prompt,
+      cached: false,
         message: "Generated new roadmap (not cached)",
-      });
+    });
     }
   } catch (error) {
     console.error("Error generating roadmap:", error);

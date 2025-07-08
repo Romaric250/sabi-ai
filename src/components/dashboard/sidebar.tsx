@@ -346,7 +346,7 @@ export default function DashboardSidebar() {
                     <span className="text-white font-bold text-sm">S</span>
                   </div>
                   <span className="text-xl font-semibold text-black">Sabi AI</span>
-                </div>
+    </div>
                 
                 {/* User Info */}
                 <div className="flex items-center space-x-3 p-3 bg-black/5 rounded-lg">
@@ -418,7 +418,7 @@ export default function DashboardSidebar() {
                   <div className="space-y-3">
                     {filteredRoadmaps.map((roadmap) => {
                       const progress = getProgressPercentage(roadmap);
-                      return (
+  return (
                         <div
                           key={roadmap.id}
                           onClick={() => {
@@ -430,7 +430,7 @@ export default function DashboardSidebar() {
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-black truncate group-hover:text-gray-700 transition-colors">
-                                {roadmap.prompt}
+            {roadmap.prompt}
                               </h3>
                               <div className="flex items-center space-x-2 mt-1">
                                 <Clock className="w-3 h-3 text-gray-400" />

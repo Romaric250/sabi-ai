@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     }
 
     const sessionUserId = session.user.id;
-    
+
     const roadmaps = await prisma.roadmap.findMany({
       where: {
         userId: sessionUserId,

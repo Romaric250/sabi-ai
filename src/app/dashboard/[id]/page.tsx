@@ -1,66 +1,81 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import { Suspense } from "react";
-import { User, BookOpen, Target, CheckCircle } from "lucide-react";
-import RoadmapFlow from "@/components/RoadmapFlow";
-import { StageModal } from "@/components/StageModal";
+import { useParams } from "next/navigation";
 import { RoadmapStage } from "@/types/roadmap";
+import CandyCrushRoadmap from "@/components/CandyCrushRoadmap";
+import { StageModal } from "@/components/StageModal";
 
-export default function DashboardRoadmapPage({ params }: { params: { id: string } }) {
+interface RoadmapData {
+  id: string;
+  title: string;
+  content: RoadmapStage[];
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function RoadmapPage() {
+  const params = useParams();
+  const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
+  const [stages, setStages] = useState<RoadmapStage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [roadmap, setRoadmap] = useState<any>(null);
-  const [transformedStages, setTransformedStages] = useState<RoadmapStage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch roadmap data
   useEffect(() => {
     const fetchRoadmap = async () => {
       try {
         const response = await fetch(`/api/roadmap/${params.id}`);
         if (response.ok) {
-          const roadmapData = await response.json();
-          setRoadmap(roadmapData);
+          const data = await response.json();
+          setRoadmap(data);
           
-          // Parse the roadmap content to get stages
-          const roadmapContent = roadmapData.content as any;
+          // Parse and process stages
+          let parsedStages: RoadmapStage[] = [];
           
-          // Handle different possible data structures
-          let stages: any[] = [];
-          if (Array.isArray(roadmapContent)) {
-            stages = roadmapContent;
-          } else if (roadmapContent && typeof roadmapContent === 'object') {
-            const keys = Object.keys(roadmapContent);
-            if (keys.every(key => !isNaN(Number(key)))) {
-              stages = Object.values(roadmapContent);
-            } else if (roadmapContent?.roadmap && Array.isArray(roadmapContent.roadmap)) {
-              stages = roadmapContent.roadmap;
-            } else if (roadmapContent?.stages && Array.isArray(roadmapContent.stages)) {
-              stages = roadmapContent.stages;
+          if (data.content && typeof data.content === 'string') {
+            try {
+              const content = JSON.parse(data.content);
+              parsedStages = Array.isArray(content) ? content : [];
+            } catch (e) {
+              console.error('Error parsing roadmap content:', e);
+              parsedStages = [];
             }
+          } else if (data.content && Array.isArray(data.content)) {
+            parsedStages = data.content;
+          } else if (data.content && typeof data.content === 'object') {
+            // Handle object with numeric keys
+            const contentObj = data.content as Record<string, any>;
+            parsedStages = Object.keys(contentObj)
+              .filter(key => !isNaN(Number(key)))
+              .sort((a, b) => Number(a) - Number(b))
+              .map(key => contentObj[key]);
           }
-          
-          // Transform stages to include proper position data and unlock status
-          const transformed = stages.map((stage: any, index: number) => ({
+
+          // Process stages to add required properties
+          const processedStages = parsedStages.map((stage, index) => ({
             ...stage,
+            id: stage.id || `stage-${index}`,
             isUnlocked: index === 0 || stage.isUnlocked || false,
             isCompleted: stage.isCompleted || false,
-            position: stage.position || { x: index * 2, y: index },
+            position: stage.position || { x: index % 3, y: Math.floor(index / 3) },
+            color: stage.color || "from-purple-500 to-blue-500",
+            icon: stage.icon || "Star"
           }));
-          
-          setTransformedStages(transformed);
+
+          setStages(processedStages);
         }
       } catch (error) {
-        console.error("Error fetching roadmap:", error);
+        console.error('Error fetching roadmap:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchRoadmap();
+    if (params.id) {
+      fetchRoadmap();
+    }
   }, [params.id]);
 
   const handleStageClick = (stage: RoadmapStage) => {
@@ -69,103 +84,66 @@ export default function DashboardRoadmapPage({ params }: { params: { id: string 
   };
 
   const handleStageComplete = (stageId: string) => {
-    setTransformedStages(prev => 
-      prev.map(stage => {
-        if (stage.id === stageId) {
-          return { ...stage, isCompleted: true };
-        }
-        // Unlock next stage
-        if (stage.id === String(parseInt(stageId) + 1)) {
-          return { ...stage, isUnlocked: true };
-        }
-        return stage;
-      })
+    setStages(prevStages => 
+      prevStages.map(stage => 
+        stage.id === stageId 
+          ? { ...stage, isCompleted: true }
+          : stage
+      )
     );
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
       </div>
     );
   }
 
   if (!roadmap) {
-    return notFound();
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-black mb-4">Roadmap Not Found</h2>
+          <p className="text-gray-600">The requested roadmap could not be loaded.</p>
+        </div>
+      </div>
+    );
   }
 
-  // Calculate progress based on completed stages
-  const completedStages = transformedStages.filter((stage: any) => stage.isCompleted).length;
-  const progress = transformedStages.length > 0 ? Math.round((completedStages / transformedStages.length) * 100) : 0;
-
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-black to-gray-700 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-black">{roadmap.prompt}</h1>
-            <p className="text-gray-600">Your personalized learning journey</p>
-          </div>
-        </div>
-        
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm text-gray-500">{progress}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-black to-gray-700 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>{completedStages} of {transformedStages.length} stages completed</span>
-            <span>{transformedStages.length - completedStages} remaining</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ReactFlow Roadmap */}
-      <div className="bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-black mb-2">Learning Path</h2>
-          <p className="text-sm text-gray-600">
-            Click on unlocked stages to start learning. Use the controls to zoom and navigate.
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-black mb-4">{roadmap.title}</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Embark on your learning journey through interactive stages designed to guide you step by step.
           </p>
         </div>
-        
-        <RoadmapFlow 
-          stages={transformedStages}
-          onStageClick={handleStageClick}
-        />
-      </div>
 
-      {/* Stage Modal */}
-      <StageModal
-        stage={selectedStage}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedStage(null);
-        }}
-        onComplete={handleStageComplete}
-      />
-
-      {/* Empty State */}
-      {transformedStages.length === 0 && (
-        <div className="text-center py-12">
-          <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-black mb-2">No stages available</h3>
-          <p className="text-gray-500">This roadmap doesn't have any stages yet.</p>
+        {/* Candy Crush Roadmap */}
+        <div className="bg-white rounded-3xl shadow-xl p-8">
+          <CandyCrushRoadmap 
+            stages={stages} 
+            onStageClick={handleStageClick}
+          />
         </div>
-      )}
+
+        {/* Stage Modal */}
+        {selectedStage && (
+          <StageModal
+            stage={selectedStage}
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedStage(null);
+            }}
+            onComplete={handleStageComplete}
+          />
+        )}
+      </div>
     </div>
   );
 }
