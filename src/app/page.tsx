@@ -1,595 +1,618 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { Navigation } from "@/components/landing/Navigation";
-import { AuthModal } from "@/components/AuthModal";
-import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import Footer from "@/components/landing/Footer";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Heart, 
+  Search, 
+  Globe, 
+  Zap, 
+  ChevronDown, 
+  ArrowUp,
+  Plus,
+  Sparkles,
+  Target,
+  CheckCircle,
+  Users,
+  Award,
+  Star,
+  ArrowRight,
+  Filter,
+  Eye,
+  Edit3,
+  MoreHorizontal,
+  Clock,
+  BookOpen
+} from "lucide-react";
 
-export default function Home() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [scrollY, setScrollY] = useState(0);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+export default function LandingPage() {
   const [prompt, setPrompt] = useState("");
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let particles: Array<{
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      size: number;
-      opacity: number;
-    }> = [];
-
-    // Initialize particles
-    for (let i = 0; i < 100; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        size: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.5 + 0.1,
-      });
+  const [isSignedIn, setIsSignedIn] = useState(true); // Simulate signed in state
+  const [userRoadmaps, setUserRoadmaps] = useState([
+    {
+      id: 1,
+      title: "Full-Stack Development",
+      description: "Master modern web development from frontend to backend",
+      progress: 75,
+      lastEdited: "2 days ago",
+      thumbnail: "bg-gradient-to-br from-blue-500 to-green-500",
+      status: "In Progress",
+      slug: "full-stack-development"
+    },
+    {
+      id: 2,
+      title: "Python for Data Science",
+      description: "Learn data analysis, machine learning, and visualization",
+      progress: 25,
+      lastEdited: "1 week ago",
+      thumbnail: "bg-gradient-to-br from-purple-500 to-pink-500",
+      status: "Active",
+      slug: "python-data-science"
+    },
+    {
+      id: 3,
+      title: "React Mastery",
+      description: "Advanced React patterns and best practices",
+      progress: 90,
+      lastEdited: "3 days ago",
+      thumbnail: "bg-gradient-to-br from-orange-500 to-red-500",
+      status: "Near Completion",
+      slug: "react-mastery"
     }
+  ]);
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      particles.forEach((particle, index) => {
-        // Update position
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        // Bounce off edges
-        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-
-        // Draw particle
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
-        ctx.fill();
-
-        // Connect nearby particles
-        particles.forEach((otherParticle, otherIndex) => {
-          if (index === otherIndex) return;
-          
-          const dx = particle.x - otherParticle.x;
-          const dy = particle.y - otherParticle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance < 100) {
-            ctx.beginPath();
-            ctx.moveTo(particle.x, particle.y);
-            ctx.lineTo(otherParticle.x, otherParticle.y);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance / 100)})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        });
-      });
-
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-        window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const session = await authClient.getSession();
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // Handle roadmap generation
-  const handleGenerateRoadmap = async () => {
-    if (!prompt.trim()) return;
-
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
+  const [publicRoadmaps, setPublicRoadmaps] = useState([
+    {
+      id: 1,
+      title: "Machine Learning Fundamentals",
+      creator: "DataScience Pro",
+      remixes: 15420,
+      category: "AI & ML",
+      thumbnail: "bg-gradient-to-br from-indigo-500 to-purple-500",
+      slug: "ml-fundamentals"
+    },
+    {
+      id: 2,
+      title: "Web3 Development",
+      creator: "Blockchain Dev",
+      remixes: 8920,
+      category: "Blockchain",
+      thumbnail: "bg-gradient-to-br from-green-500 to-blue-500",
+      slug: "web3-development"
+    },
+    {
+      id: 3,
+      title: "Mobile App Development",
+      creator: "App Creator",
+      remixes: 12450,
+      category: "Mobile",
+      thumbnail: "bg-gradient-to-br from-pink-500 to-orange-500",
+      slug: "mobile-app-dev"
+    },
+    {
+      id: 4,
+      title: "DevOps Engineering",
+      creator: "Cloud Expert",
+      remixes: 6780,
+      category: "DevOps",
+      thumbnail: "bg-gradient-to-br from-yellow-500 to-green-500",
+      slug: "devops-engineering"
     }
+  ]);
 
-    setIsGenerating(true);
-    try {
-      const response = await fetch('/api/roadmap/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: prompt.trim() }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Roadmap generation response:', data);
-        
-        // If we have a roadmap, redirect to dashboard
-        if (data.success) {
-          if (data.roadmapId) {
-            router.push(`/dashboard/${data.roadmapId}`);
-          } else {
-            router.push('/dashboard');
-          }
-        } else {
-          throw new Error('Failed to generate roadmap');
-        }
-    } else {
-        throw new Error('Failed to generate roadmap');
-      }
-    } catch (error) {
-      console.error('Error generating roadmap:', error);
-      alert('Failed to generate roadmap. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleAuthSuccess = () => {
-    setIsAuthenticated(true);
-    setShowAuthModal(false);
-    // Retry roadmap generation if there was a prompt
-    if (prompt.trim()) {
-      handleGenerateRoadmap();
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission
+    console.log("Creating roadmap for:", prompt);
   };
 
   return (
-    <main className="min-h-screen bg-black text-white overflow-hidden relative">
-      {/* Interactive Background Canvas */}
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0 pointer-events-none opacity-30"
-        style={{ zIndex: 1 }}
-      />
-
-      {/* Floating Geometric Shapes */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 2 }}>
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-32 h-32 border border-white/20 rounded-full"
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${10 + i * 20}%`,
-              transform: `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px) rotate(${scrollY * 0.1}deg)`,
-              animation: `float ${3 + i}s ease-in-out infinite`,
-            }}
-          />
-        ))}
-        
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={`square-${i}`}
-            className="absolute w-24 h-24 border border-white/10 rotate-45"
-            style={{
-              right: `${15 + i * 20}%`,
-              top: `${30 + i * 15}%`,
-              transform: `translate(${-mousePosition.x * 0.005}px, ${-mousePosition.y * 0.005}px) rotate(${-scrollY * 0.05}deg)`,
-              animation: `float ${4 + i}s ease-in-out infinite reverse`,
-            }}
-          />
-        ))}
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 relative overflow-hidden">
+      {/* Subtle background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-black/5 rounded-full blur-3xl animate-pulse-soft" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-black/5 rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-black/3 rounded-full blur-2xl animate-float" />
       </div>
 
       {/* Navigation */}
-      <Navigation />
-      
-      {/* Hero Section */}
-      <section className="relative px-6 pt-32 pb-24 sm:px-12 lg:px-16 lg:pt-40 lg:pb-32" style={{ zIndex: 10 }}>
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center relative">
-            {/* Animated Background Text */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-5">
-              <h1 className="text-9xl font-black tracking-tighter">
-                SABI AI
-              </h1>
+      <nav className="relative z-10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Logo */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center space-x-2"
+          >
+            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+              <Heart className="w-5 h-5 text-white" />
             </div>
-            
-            {/* Main Hero Content */}
-            <div className="relative">
-              <div className="inline-block mb-8">
-                <span className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm font-medium">
-                  🚀 Next-Generation Learning Platform
-                </span>
+            <span className="text-xl font-bold text-black">Sabi AI</span>
+          </motion.div>
+
+          {/* Navigation Links */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="hidden md:flex items-center space-x-8"
+          >
+            <a href="#community" className="text-black hover:text-gray-600 transition-colors duration-200">Community</a>
+            <a href="#pricing" className="text-black hover:text-gray-600 transition-colors duration-200">Pricing</a>
+            <a href="#enterprise" className="text-black hover:text-gray-600 transition-colors duration-200">Enterprise</a>
+            <a href="#learn" className="text-black hover:text-gray-600 transition-colors duration-200">Learn</a>
+            <a href="#launched" className="text-black hover:text-gray-600 transition-colors duration-200">Launched</a>
+          </motion.div>
+
+          {/* Right Side */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex items-center space-x-4"
+          >
+            <Button variant="ghost" className="text-black hover:bg-black/5">
+              <Award className="w-4 h-4 mr-2" />
+              Get free credits
+            </Button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">R</span>
               </div>
-              
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8">
-                <span className="block">Master Any Skill</span>
-                <span className="block bg-gradient-to-r from-white via-gray-300 to-white bg-clip-text text-transparent">
-                  with AI Intelligence
-                </span>
-              </h1>
-              
-              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-                Experience the future of learning with our revolutionary AI-powered platform that adapts, 
-                evolves, and accelerates your journey to mastery.
-              </p>
-              
-              {/* Interactive Text Area */}
-              <div className="relative max-w-2xl mx-auto mb-16">
-                <div className="relative">
-                  {/* Text area container */}
-                  <div className="relative bg-black/50 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-                    <textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      className="w-full bg-transparent text-white outline-none text-lg resize-none"
-                      rows={3}
-                      placeholder="Ask me anything..."
-                      id="hero-textarea"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleGenerateRoadmap();
-                        }
-                      }}
-                    />
-                    
-                    {/* Send button */}
-                    <button 
-                      onClick={handleGenerateRoadmap}
-                      disabled={isGenerating || !prompt.trim()}
-                      className="absolute bottom-4 right-4 group disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <div className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110">
-                        {isGenerating ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
+              <span className="text-sm font-medium text-black">Romaric's Sabi AI</span>
+            </div>
+          </motion.div>
+        </div>
+      </nav>
+
+      {/* Main Hero Section */}
+      <main className="relative z-10 px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Main Headline */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mb-8"
+          >
+            <h1 className="text-6xl md:text-7xl font-bold text-black mb-6 leading-tight">
+              Build something
+              <div className="inline-flex items-center mx-3">
+                <Heart className="w-12 h-12 text-black" />
+              </div>
+              amazing
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Create learning roadmaps and master new skills by chatting with AI
+            </p>
+          </motion.div>
+
+          {/* Main Input Form */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="mb-12"
+          >
+            <form onSubmit={handleSubmit} className="relative">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Ask Sabi AI to create a learning roadmap for..."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  className="w-full h-16 pl-6 pr-32 text-lg bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400 shadow-xl"
+                />
+                
+                {/* Internal Icons */}
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center">
+                    <Search className="w-4 h-4 text-black" />
+                  </div>
+                  <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-black" />
                   </div>
                 </div>
               </div>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
-                <button 
-                  onClick={() => router.push('/dashboard')}
-                  className="group relative px-8 py-4 bg-white text-black font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:scale-105"
+
+              {/* Bottom Controls */}
+              <div className="flex items-center justify-between mt-4 px-2">
+                <div className="flex items-center space-x-3">
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5">
+                    <Globe className="w-4 h-4 mr-1" />
+                    Public
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5">
+                    <Zap className="w-4 h-4 mr-1" />
+                    AI Powered
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
+
+                {/* Send Button */}
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-14 h-14 bg-black hover:bg-gray-800 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
                 >
-                  <span className="relative z-10">Go to Dashboard</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </button>
-                
-                {!isAuthenticated && (
-                  <button 
-                    onClick={() => setShowAuthModal(true)}
-                    className="group relative px-8 py-4 border border-white/30 text-white font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:bg-white/10"
-                  >
-                    <span className="relative z-10">Sign In</span>
-                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </button>
-                )}
+                  <ArrowUp className="w-6 h-6" />
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+
+          {/* Features Grid */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+          >
+            {[
+              {
+                icon: Target,
+                title: "Personalized Learning",
+                description: "AI creates custom roadmaps based on your goals and experience"
+              },
+              {
+                icon: CheckCircle,
+                title: "Track Progress",
+                description: "Monitor your learning journey with detailed analytics and milestones"
+              },
+              {
+                icon: Users,
+                title: "Community Support",
+                description: "Learn alongside others and share your achievements"
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.9 + index * 0.1 }}
+                className="text-center p-6 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-lg transition-all duration-300 group cursor-pointer transform hover:-translate-y-1"
+              >
+                <div className="w-16 h-16 bg-black/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <feature.icon className="w-8 h-8 text-black" />
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">{feature.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </main>
+
+      {/* Romaric's Sabi AI's Workspace */}
+      {isSignedIn && (
+        <motion.section 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
+          className="relative z-10 px-6 py-16"
+        >
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-8 shadow-2xl">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-black">Romaric's Sabi AI's Workspace</h2>
               </div>
               
-              {/* Floating Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                {[
-                  { number: "10K+", label: "Active Learners" },
-                  { number: "50+", label: "Skills Available" },
-                  { number: "95%", label: "Success Rate" }
-                ].map((stat, i) => (
-                  <div
-                    key={i}
-                    className="group relative p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-300"
-                    style={{
-                      transform: `translateY(${Math.sin(scrollY * 0.01 + i) * 10}px)`,
-                    }}
-                  >
-                    <div className="text-3xl font-bold mb-2">{stat.number}</div>
-                    <div className="text-gray-400">{stat.label}</div>
-                    <div className="absolute inset-0 border border-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Search and Filters */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search roadmaps..."
+                      className="w-full pl-10 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400"
+                    />
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" className="border-gray-200/60 text-black hover:bg-black/5">
+                      Last edited <Filter className="w-3 h-3 ml-1" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-gray-200/60 text-black hover:bg-black/5">
+                      Newest first <Filter className="w-3 h-3 ml-1" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-gray-200/60 text-black hover:bg-black/5">
+                      All creators <Filter className="w-3 h-3 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <Button variant="ghost" className="text-black hover:text-gray-700">
+                  View All
+                </Button>
+              </div>
+
+              {/* My Roadmaps Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {userRoadmaps.map((roadmap, index) => (
+                  <motion.div
+                    key={roadmap.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 1.2 + index * 0.1 }}
+                    className="group cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  >
+                    {/* Thumbnail */}
+                    <div className={`h-32 ${roadmap.thumbnail} rounded-t-2xl relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-black/10" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <h3 className="text-lg font-semibold mb-2">{roadmap.title}</h3>
+                          <p className="text-sm opacity-90">{roadmap.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-medium text-gray-600">{roadmap.status}</span>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
+                            <Eye className="w-4 h-4 text-gray-600" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
+                            <Edit3 className="w-4 h-4 text-gray-600" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
+                            <MoreHorizontal className="w-4 h-4 text-gray-600" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-600">Progress</span>
+                          <span className="text-xs font-semibold text-black">{roadmap.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-2 bg-black rounded-full transition-all duration-1000 ease-out"
+                            style={{ width: `${roadmap.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Footer */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-semibold">R</span>
+                          </div>
+                          <span className="text-sm text-gray-600">{roadmap.slug}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">Edited {roadmap.lastEdited}</span>
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </motion.section>
+      )}
 
-      {/* Features Section */}
-      <section className="py-24 sm:py-32 relative" style={{ zIndex: 10 }}>
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8">
-              Revolutionary Features
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Cutting-edge technology that redefines what's possible in learning
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Neural Adaptation",
-                description: "Our AI continuously learns your patterns and adapts the curriculum in real-time",
-                icon: "🧠"
-              },
-              {
-                title: "Quantum Learning Paths",
-                description: "Experience multiple learning dimensions simultaneously for accelerated mastery",
-                icon: "⚡"
-              },
-              {
-                title: "Holographic Interface",
-                description: "Immerse yourself in a 3D learning environment that responds to your movements",
-                icon: "🌐"
-              }
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="group relative p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-500"
-                style={{
-                  transform: `translateY(${Math.sin(scrollY * 0.01 + i * 2) * 15}px)`,
-                }}
-              >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-bold mb-4">{feature.title}</h3>
-                <p className="text-gray-300">{feature.description}</p>
-                
-                {/* Animated border */}
-                <div className="absolute inset-0 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Demo Section */}
-      <section className="py-24 sm:py-32 relative" style={{ zIndex: 10 }}>
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8">
-              Experience the Future
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              See how our platform transforms learning into an immersive journey
-            </p>
-          </div>
-          
-          <div className="relative">
-            {/* Interactive Demo Area */}
-            <div className="relative h-96 bg-white/5 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">🎯</div>
-                  <h3 className="text-2xl font-bold mb-2">Interactive Demo</h3>
-                  <p className="text-gray-300">Move your mouse to see the magic</p>
-                </div>
-              </div>
-              
-              {/* Floating elements that follow mouse */}
-              <div
-                className="absolute w-4 h-4 bg-white rounded-full pointer-events-none"
-                style={{
-                  left: mousePosition.x - 8,
-                  top: mousePosition.y - 8,
-                  transition: 'all 0.1s ease-out',
-                }}
-              />
-              
-              <div
-                className="absolute w-2 h-2 bg-white/50 rounded-full pointer-events-none"
-                style={{
-                  left: mousePosition.x - 4,
-                  top: mousePosition.y - 4,
-                  transition: 'all 0.2s ease-out',
-                }}
-              />
+      {/* From the Community */}
+      <motion.section 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: isSignedIn ? 1.4 : 1.0 }}
+        className="relative z-10 px-6 py-16"
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-black">From the Community</h2>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Technology Showcase */}
-      <section className="py-24 sm:py-32 relative" style={{ zIndex: 10 }}>
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8">
-              Powered by Next-Gen AI
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Cutting-edge artificial intelligence that revolutionizes how you learn
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { name: "Neural Networks", icon: "🧠", description: "Advanced deep learning algorithms" },
-              { name: "Quantum Computing", icon: "⚛️", description: "Next-generation processing power" },
-              { name: "Machine Learning", icon: "🤖", description: "Adaptive learning patterns" },
-              { name: "Natural Language", icon: "💬", description: "Human-like understanding" }
-            ].map((tech, i) => (
-              <div
-                key={i}
-                className="group relative p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-500"
-                style={{
-                  transform: `translateY(${Math.sin(scrollY * 0.01 + i * 1.5) * 20}px)`,
-                }}
-              >
-                <div className="text-5xl mb-4">{tech.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{tech.name}</h3>
-                <p className="text-gray-300 text-sm">{tech.description}</p>
+            
+            {/* Filters and Categories */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" size="sm" className="border-gray-200/60 text-black hover:bg-black/5">
+                  Popular <Filter className="w-3 h-3 ml-1" />
+                </Button>
                 
-                {/* Animated border */}
-                <div className="absolute inset-0 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-24 sm:py-32 relative" style={{ zIndex: 10 }}>
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8">
-              Loved by Innovators
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              See what the future's brightest minds have to say
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "This is the future of education. Sabi AI transformed my learning journey completely.",
-                author: "Dr. Sarah Chen",
-                role: "AI Researcher",
-                rating: 5
-              },
-              {
-                quote: "The neural adaptation is incredible. It's like having a personal AI tutor that knows exactly what I need.",
-                author: "Marcus Rodriguez",
-                role: "Tech Entrepreneur",
-                rating: 5
-              },
-              {
-                quote: "Finally, a platform that understands the science of learning and applies it perfectly.",
-                author: "Emma Thompson",
-                role: "Neuroscientist",
-                rating: 5
-              }
-            ].map((testimonial, i) => (
-              <div
-                key={i}
-                className="group relative p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl hover:bg-white/10 transition-all duration-500"
-                style={{
-                  transform: `translateY(${Math.sin(scrollY * 0.01 + i * 2) * 15}px)`,
-                }}
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, j) => (
-                    <div key={j} className="w-4 h-4 bg-yellow-400 rounded-full" />
+                <div className="flex items-center space-x-2">
+                  {["Discover", "Internal Tools", "Website", "Personal", "Consumer App", "B2B App", "Prototype"].map((category, index) => (
+                    <Button
+                      key={category}
+                      variant={index === 0 ? "default" : "ghost"}
+                      size="sm"
+                      className={index === 0 ? "bg-black text-white" : "text-black hover:bg-black/5"}
+                    >
+                      {category}
+                    </Button>
                   ))}
                 </div>
-                
-                <p className="text-gray-300 mb-6 italic">"{testimonial.quote}"</p>
-                
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-white/20 rounded-full mr-4" />
-                  <div>
-                    <p className="font-semibold text-white">{testimonial.author}</p>
-                    <p className="text-sm text-gray-400">{testimonial.role}</p>
-                  </div>
-                </div>
-                
-                {/* Animated border */}
-                <div className="absolute inset-0 border border-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
+              
+              <Button variant="ghost" className="text-black hover:text-gray-700">
+                View All
+              </Button>
+            </div>
+
+            {/* Community Roadmaps Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {publicRoadmaps.map((roadmap, index) => (
+                <motion.div
+                  key={roadmap.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: (isSignedIn ? 1.6 : 1.2) + index * 0.1 }}
+                  className="group cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  {/* Thumbnail */}
+                  <div className={`h-32 ${roadmap.thumbnail} rounded-t-2xl relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-black/10" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <h3 className="text-lg font-semibold mb-2">{roadmap.title}</h3>
+                        <p className="text-sm opacity-90">{roadmap.creator}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-600">{roadmap.category}</span>
+                      <span className="text-xs text-gray-500">{roadmap.remixes.toLocaleString()} Remixes</span>
+                    </div>
+                    
+                    <h3 className="font-semibold text-black mb-2">{roadmap.title}</h3>
+                    <p className="text-xs text-gray-600 mb-3">{roadmap.creator}</p>
+                    
+                    <Button variant="outline" size="sm" className="w-full border-gray-200/60 text-black hover:bg-black/5">
+                      Remix
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Stats Section */}
+      <motion.section 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: isSignedIn ? 1.8 : 1.4 }}
+        className="relative z-10 px-6 py-16 bg-white/50 backdrop-blur-sm"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-black mb-4">Trusted by learners worldwide</h2>
+            <p className="text-gray-600">Join thousands of students mastering new skills</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { number: "50K+", label: "Active Learners" },
+              { number: "100+", label: "Learning Paths" },
+              { number: "95%", label: "Success Rate" },
+              { number: "24/7", label: "AI Support" }
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: (isSignedIn ? 2.0 : 1.6) + index * 0.1 }}
+                className="text-center"
+              >
+                <div className="text-4xl font-bold text-black mb-2">{stat.number}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA Section */}
-      <section className="py-24 sm:py-32 relative" style={{ zIndex: 10 }}>
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8">
-              Ready to Transform Learning?
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-12">
-              Join the revolution and experience the future of education today
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                          <button 
-              onClick={() => router.push('/dashboard')}
-              className="group relative px-12 py-6 bg-white text-black font-bold text-lg rounded-xl overflow-hidden transition-all duration-300 hover:scale-105"
-            >
-              <span className="relative z-10">Launch Your Future</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
-            
-            {!isAuthenticated && (
-              <button 
-                onClick={() => setShowAuthModal(true)}
-                className="group relative px-12 py-6 border border-white/30 text-white font-bold text-lg rounded-xl overflow-hidden transition-all duration-300 hover:bg-white/10"
-              >
-                <span className="relative z-10">Get Started</span>
-                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </button>
-            )}
-            </div>
+      <motion.section 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: isSignedIn ? 2.2 : 1.8 }}
+        className="relative z-10 px-6 py-20"
+      >
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-black mb-6">
+            Ready to start your learning journey?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Create your first AI-powered learning roadmap and begin mastering new skills today.
+          </p>
+          <div className="flex items-center justify-center space-x-4">
+            <Button size="lg" className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+              <Sparkles className="w-5 h-5 mr-2" />
+              Get Started Free
+            </Button>
+            <Button variant="outline" size="lg" className="border-2 border-black/20 text-black hover:bg-black/5 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300">
+              View Examples
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
-    </div>
-      </section>
-
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(180deg); }
-        }
-      `}</style>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={handleAuthSuccess}
-      />
+        </div>
+      </motion.section>
 
       {/* Footer */}
-      <Footer />
-    </main>
+      <footer className="relative z-10 px-6 py-16 bg-gray-50/80 border-t border-gray-200/60">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            {/* Logo */}
+            <div className="col-span-1">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-black">Sabi AI</span>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Empowering learners with AI-powered education
+              </p>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h3 className="font-semibold text-black mb-4">Company</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Blog</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Careers</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">About</a></li>
+              </ul>
+            </div>
+
+            {/* Product */}
+            <div>
+              <h3 className="font-semibold text-black mb-4">Product</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Features</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Pricing</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Integrations</a></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h3 className="font-semibold text-black mb-4">Resources</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Documentation</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Support</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Community</a></li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="font-semibold text-black mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Privacy Policy</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Terms of Service</a></li>
+                <li><a href="#" className="text-gray-600 hover:text-black transition-colors duration-200">Cookie Policy</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200/60 mt-12 pt-8 text-center">
+            <p className="text-gray-600 text-sm">
+              © 2024 Sabi AI. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
