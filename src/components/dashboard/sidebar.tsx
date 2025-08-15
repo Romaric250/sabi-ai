@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/components/session";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, 
   BookOpen, 
@@ -17,7 +18,15 @@ import {
   Clock,
   CheckCircle,
   Search,
-  User
+  User,
+  Home,
+  BarChart3,
+  Bell,
+  HelpCircle,
+  Star,
+  Zap,
+  Award,
+  Brain
 } from "lucide-react";
 import { roadMapApi } from "@/lib/api";
 
@@ -38,8 +47,11 @@ export default function DashboardSidebar() {
   const [isCreating, setIsCreating] = useState(false);
   const [newRoadmapPrompt, setNewRoadmapPrompt] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredRoadmap, setHoveredRoadmap] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchRoadmaps();
   }, []);
 
@@ -110,17 +122,14 @@ export default function DashboardSidebar() {
   const getProgressPercentage = (roadmap: Roadmap) => {
     if (!roadmap.content) return 0;
     
-    // Handle different possible data structures
     let stages: any[] = [];
     const content = roadmap.content as any;
     
     if (Array.isArray(content)) {
       stages = content;
     } else if (content && typeof content === 'object') {
-      // Check if it's an object with numeric keys (array-like object)
       const keys = Object.keys(content);
       if (keys.every(key => !isNaN(Number(key)))) {
-        // Convert object with numeric keys to array
         stages = Object.values(content);
       } else if (content?.roadmap && Array.isArray(content.roadmap)) {
         stages = content.roadmap;
@@ -135,55 +144,105 @@ export default function DashboardSidebar() {
     return Math.round((completedStages / stages.length) * 100);
   };
 
+  const navigationItems = [
+    { icon: Home, label: "Dashboard", href: "/dashboard" },
+    { icon: BarChart3, label: "Analytics", href: "/analytics" },
+    { icon: Bell, label: "Notifications", href: "/notifications" },
+    { icon: HelpCircle, label: "Help & Support", href: "/help" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+  ];
+
+  if (!mounted) return null;
+
   return (
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:block h-full">
         <div className="p-6 h-full flex flex-col">
-          {/* Header with Logo and User */}
-          <div className="mb-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+          {/* Enhanced Header with Logo and User */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-8"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex items-center space-x-3 mb-6"
+            >
+              <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center shadow-xl relative group">
+                <span className="text-white font-bold text-lg">S</span>
+                {/* Subtle glow effect */}
+                <div className="absolute inset-0 bg-black/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
               </div>
-              <span className="text-xl font-semibold text-black">Sabi AI</span>
-            </div>
+              <span className="text-2xl font-bold text-black">Sabi AI</span>
+            </motion.div>
             
-            {/* User Info */}
-            <div className="flex items-center space-x-3 p-3 bg-black/5 rounded-lg">
-              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
+            {/* Enhanced User Info */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="group relative overflow-hidden bg-gray-50/80 border border-gray-200/60 rounded-3xl p-4 hover:shadow-xl transition-all duration-500"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 relative">
+                  <User className="w-6 h-6 text-white" />
+                  {/* Pulse ring */}
+                  <div className="absolute inset-0 rounded-2xl bg-black/30 animate-ping" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-black truncate">{session?.user?.email}</p>
+                  <p className="text-xs text-gray-600 flex items-center">
+                    <div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />
+                    Active Learner
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-black truncate">{session?.user?.email}</p>
-                <p className="text-xs text-gray-600">Learning</p>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          {/* Enhanced Search Bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mb-8"
+          >
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-black transition-colors duration-300" />
               <input
                 type="text"
                 placeholder="Search roadmaps..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
+                className="w-full pl-10 pr-4 py-3 bg-white/90 backdrop-blur-sm border border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400 shadow-sm"
               />
+              {/* Search glow effect */}
+              <div className="absolute inset-0 rounded-2xl bg-black/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-xl" />
             </div>
-          </div>
+          </motion.div>
 
-          {/* Create New Roadmap Button */}
-          <div className="mb-6">
+          {/* Enhanced Create New Roadmap Button */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="mb-8"
+          >
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button 
-                  className="w-full bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full bg-black hover:bg-gray-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-14 text-base font-semibold rounded-2xl relative overflow-hidden group"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Roadmap
+                  {/* Button glow effect */}
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl" />
+                  <div className="relative z-10 flex items-center">
+                    <Plus className="w-6 h-6 mr-3 group-hover:rotate-90 transition-transform duration-300" />
+                    New Roadmap
+                  </div>
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-[400px] sm:w-[540px]">
@@ -209,7 +268,7 @@ export default function DashboardSidebar() {
                         value={newRoadmapPrompt}
                         onChange={(e) => setNewRoadmapPrompt(e.target.value)}
                         placeholder="e.g., Learn React from scratch, Master Python for data science, Become a full-stack developer..."
-                        className="w-full h-32 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+                        className="w-full h-32 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none transition-all duration-200"
                       />
                     </div>
                     
@@ -231,22 +290,40 @@ export default function DashboardSidebar() {
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
+          </motion.div>
 
-          {/* Roadmaps List */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Enhanced Roadmaps List */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1 }}
+            className="flex-1 overflow-y-auto space-y-3"
+          >
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-20 bg-gray-200 rounded-lg"></div>
-                  </div>
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                    className="animate-pulse"
+                  >
+                    <div className="h-28 bg-gray-200/60 rounded-2xl" />
+                  </motion.div>
                 ))}
               </div>
             ) : filteredRoadmaps.length === 0 ? (
-              <div className="text-center py-8">
-                <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-black mb-2">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+                className="text-center py-8"
+              >
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-10 h-10 text-gray-300" />
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
                   {searchQuery ? "No roadmaps found" : "No roadmaps yet"}
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">
@@ -261,23 +338,30 @@ export default function DashboardSidebar() {
                     Create Roadmap
                   </Button>
                 )}
-              </div>
+              </motion.div>
             ) : (
-              <div className="space-y-3">
-                {filteredRoadmaps.map((roadmap) => {
+              <AnimatePresence>
+                {filteredRoadmaps.map((roadmap, index) => {
                   const progress = getProgressPercentage(roadmap);
                   return (
-                    <div
+                    <motion.div
                       key={roadmap.id}
+                      initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      onMouseEnter={() => setHoveredRoadmap(roadmap.id)}
+                      onMouseLeave={() => setHoveredRoadmap(null)}
                       onClick={() => router.push(`/dashboard/${roadmap.id}`)}
-                      className="group cursor-pointer p-4 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl hover:bg-white/80 hover:border-gray-300/50 hover:shadow-md transition-all duration-200"
+                      className={`group cursor-pointer p-5 bg-white/90 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:bg-white/95 hover:border-gray-300/60 hover:shadow-xl transition-all duration-500 transform ${
+                        hoveredRoadmap === roadmap.id ? 'scale-105 -translate-y-2' : 'scale-100 translate-y-0'
+                      }`}
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-black truncate group-hover:text-gray-700 transition-colors">
+                          <h3 className="font-semibold text-black truncate group-hover:text-gray-700 transition-colors duration-300">
                             {roadmap.prompt}
                           </h3>
-                          <div className="flex items-center space-x-2 mt-1">
+                          <div className="flex items-center space-x-2 mt-2">
                             <Clock className="w-3 h-3 text-gray-400" />
                             <span className="text-xs text-gray-500">
                               {formatDate(roadmap.createdAt)}
@@ -286,46 +370,68 @@ export default function DashboardSidebar() {
                         </div>
                         <div className="flex items-center space-x-1">
                           {progress === 100 ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <CheckCircle className="w-5 h-5 text-black" />
+                            </div>
                           ) : (
-                            <Target className="w-4 h-4 text-gray-400" />
+                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Target className="w-5 h-5 text-gray-500" />
+                            </div>
                           )}
                         </div>
                       </div>
                       
-                      {/* Progress Bar */}
-                      <div className="space-y-2">
+                      {/* Enhanced Progress Bar */}
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-600">Progress</span>
-                          <span className="text-xs text-gray-500">{progress}%</span>
+                          <span className="text-xs font-semibold text-gray-700">{progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className="bg-black h-1.5 rounded-full transition-all duration-300"
-                            style={{ width: `${progress}%` }}
+                        <div className="w-full bg-gray-200/60 rounded-full h-2.5 overflow-hidden">
+                          <motion.div
+                            className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${
+                              progress === 100 
+                                ? 'bg-black' 
+                                : 'bg-black'
+                            }`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, delay: index * 0.1 }}
                           />
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </AnimatePresence>
             )}
-          </div>
+          </motion.div>
 
-          {/* Bottom Navigation */}
-          <div className="mt-6 pt-6 border-t border-gray-200/50">
+          {/* Enhanced Bottom Navigation */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+            className="mt-8 pt-6 border-t border-gray-200/60"
+          >
             <div className="space-y-2">
-              <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-black hover:bg-gray-100/50 rounded-lg transition-all duration-200">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-sm font-medium">Analytics</span>
-              </button>
-              <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-black hover:bg-gray-100/50 rounded-lg transition-all duration-200">
-                <Settings className="w-4 h-4" />
-                <span className="text-sm font-medium">Settings</span>
-              </button>
+              {navigationItems.map((item, index) => (
+                <motion.button
+                  key={item.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 1.4 + index * 0.1 }}
+                  onClick={() => router.push(item.href)}
+                  className="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-black hover:bg-gray-100/60 rounded-2xl transition-all duration-300 group"
+                >
+                  <div className="w-8 h-8 bg-black/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                    <item.icon className="w-4 h-4 text-black" />
+                  </div>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </motion.button>
+              ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -341,35 +447,40 @@ export default function DashboardSidebar() {
             <div className="p-6 h-full flex flex-col">
               {/* Mobile Header */}
               <div className="mb-8">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">S</span>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-lg">S</span>
                   </div>
-                  <span className="text-xl font-semibold text-black">Sabi AI</span>
-    </div>
+                  <span className="text-2xl font-bold text-black">Sabi AI</span>
+                </div>
                 
                 {/* User Info */}
-                <div className="flex items-center space-x-3 p-3 bg-black/5 rounded-lg">
-                  <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-black truncate">{session?.user?.email}</p>
-                    <p className="text-xs text-gray-600">Learning</p>
+                <div className="group relative overflow-hidden bg-gray-50/80 border border-gray-200/60 rounded-2xl p-4 hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-black truncate">{session?.user?.email}</p>
+                      <p className="text-xs text-gray-600 flex items-center">
+                        <div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />
+                        Active Learner
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Search Bar */}
               <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-black transition-colors duration-200" />
                   <input
                     type="text"
                     placeholder="Search roadmaps..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-3 bg-white/90 backdrop-blur-sm border border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -378,27 +489,29 @@ export default function DashboardSidebar() {
               <div className="mb-6">
                 <Button 
                   onClick={() => setIsSheetOpen(true)}
-                  className="w-full bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full bg-black hover:bg-gray-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-14 text-base font-semibold rounded-2xl"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-6 h-6 mr-3" />
                   New Roadmap
                 </Button>
               </div>
 
               {/* Roadmaps List (same as desktop) */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto space-y-3">
                 {isLoading ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
                       <div key={i} className="animate-pulse">
-                        <div className="h-20 bg-gray-200 rounded-lg"></div>
+                        <div className="h-28 bg-gray-200/60 rounded-2xl" />
                       </div>
                     ))}
                   </div>
                 ) : filteredRoadmaps.length === 0 ? (
                   <div className="text-center py-8">
-                    <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-black mb-2">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="w-10 h-10 text-gray-300" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-black mb-2">
                       {searchQuery ? "No roadmaps found" : "No roadmaps yet"}
                     </h3>
                     <p className="text-sm text-gray-500 mb-4">
@@ -418,21 +531,20 @@ export default function DashboardSidebar() {
                   <div className="space-y-3">
                     {filteredRoadmaps.map((roadmap) => {
                       const progress = getProgressPercentage(roadmap);
-  return (
+                      return (
                         <div
                           key={roadmap.id}
                           onClick={() => {
                             router.push(`/dashboard/${roadmap.id}`);
-                            // Close mobile sidebar
                           }}
-                          className="group cursor-pointer p-4 bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-xl hover:bg-white/80 hover:border-gray-300/50 hover:shadow-md transition-all duration-200"
+                          className="group cursor-pointer p-5 bg-white/90 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:bg-white/95 hover:border-gray-300/60 hover:shadow-xl transition-all duration-300"
                         >
-                          <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-start justify-between mb-4">
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-black truncate group-hover:text-gray-700 transition-colors">
-            {roadmap.prompt}
+                              <h3 className="font-semibold text-black truncate group-hover:text-gray-700 transition-colors duration-200">
+                                {roadmap.prompt}
                               </h3>
-                              <div className="flex items-center space-x-2 mt-1">
+                              <div className="flex items-center space-x-2 mt-2">
                                 <Clock className="w-3 h-3 text-gray-400" />
                                 <span className="text-xs text-gray-500">
                                   {formatDate(roadmap.createdAt)}
@@ -441,22 +553,30 @@ export default function DashboardSidebar() {
                             </div>
                             <div className="flex items-center space-x-1">
                               {progress === 100 ? (
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center">
+                                  <CheckCircle className="w-5 h-5 text-black" />
+                                </div>
                               ) : (
-                                <Target className="w-4 h-4 text-gray-400" />
+                                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                  <Target className="w-5 h-5 text-gray-500" />
+                                </div>
                               )}
                             </div>
                           </div>
                           
                           {/* Progress Bar */}
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-medium text-gray-600">Progress</span>
-                              <span className="text-xs text-gray-500">{progress}%</span>
+                              <span className="text-xs font-semibold text-gray-700">{progress}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div className="w-full bg-gray-200/60 rounded-full h-2.5 overflow-hidden">
                               <div
-                                className="bg-black h-1.5 rounded-full transition-all duration-300"
+                                className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${
+                                  progress === 100 
+                                    ? 'bg-black' 
+                                    : 'bg-black'
+                                }`}
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
@@ -469,16 +589,20 @@ export default function DashboardSidebar() {
               </div>
 
               {/* Bottom Navigation */}
-              <div className="mt-6 pt-6 border-t border-gray-200/50">
+              <div className="mt-8 pt-6 border-t border-gray-200/60">
                 <div className="space-y-2">
-                  <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-black hover:bg-gray-100/50 rounded-lg transition-all duration-200">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-sm font-medium">Analytics</span>
-                  </button>
-                  <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-black hover:bg-gray-100/50 rounded-lg transition-all duration-200">
-                    <Settings className="w-4 h-4" />
-                    <span className="text-sm font-medium">Settings</span>
-                  </button>
+                  {navigationItems.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => router.push(item.href)}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-black hover:bg-gray-100/60 rounded-2xl transition-all duration-300 group"
+                    >
+                      <div className="w-8 h-8 bg-black/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                        <item.icon className="w-4 h-4 text-black" />
+                      </div>
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

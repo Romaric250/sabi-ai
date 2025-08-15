@@ -19,17 +19,26 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <SessionProvider value={{ session, user: session.user }}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 relative overflow-hidden">
+          {/* Subtle background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-black/5 rounded-full blur-3xl animate-pulse-soft" />
+            <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-black/5 rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-black/3 rounded-full blur-2xl animate-float" />
+          </div>
+          
           {/* Main Layout: Sidebar + Content */}
-          <div className="flex">
-            {/* Sidebar */}
-            <div className="w-80 bg-white/50 backdrop-blur-xl border-r border-slate-200/50 min-h-screen">
+          <div className="flex relative z-10">
+            {/* Enhanced Sidebar */}
+            <div className="w-80 bg-white/90 backdrop-blur-2xl border-r border-gray-200/60 min-h-screen shadow-2xl relative">
+              {/* Subtle sidebar accent */}
+              <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-300/50 to-transparent" />
               <DashboardSidebar />
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 p-8">
-              <div className="max-w-6xl mx-auto">
+            <div className="flex-1 p-8 relative">
+              <div className="max-w-7xl mx-auto">
                 {children}
               </div>
             </div>

@@ -96,8 +96,8 @@ export function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {[
-              { name: "Features", href: "#features" },
-              { name: "Technology", href: "#tech" },
+              { name: "About", href: "#About" },
+              { name: "Docs", href: "#docs" },
             ].map((item, i) => (
               <a
                 key={item.name}
