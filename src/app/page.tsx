@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import { 
   Heart, 
   Search, 
@@ -24,45 +25,26 @@ import {
   Edit3,
   MoreHorizontal,
   Clock,
-  BookOpen
+  BookOpen,
+  LogOut,
+  LogIn
 } from "lucide-react";
 
-export default function LandingPage() {
-  const [prompt, setPrompt] = useState("");
-  const [isSignedIn, setIsSignedIn] = useState(true); // Simulate signed in state
-  const [userRoadmaps, setUserRoadmaps] = useState([
-    {
-      id: 1,
-      title: "Full-Stack Development",
-      description: "Master modern web development from frontend to backend",
-      progress: 75,
-      lastEdited: "2 days ago",
-      thumbnail: "bg-gradient-to-br from-blue-500 to-green-500",
-      status: "In Progress",
-      slug: "full-stack-development"
-    },
-    {
-      id: 2,
-      title: "Python for Data Science",
-      description: "Learn data analysis, machine learning, and visualization",
-      progress: 25,
-      lastEdited: "1 week ago",
-      thumbnail: "bg-gradient-to-br from-purple-500 to-pink-500",
-      status: "Active",
-      slug: "python-data-science"
-    },
-    {
-      id: 3,
-      title: "React Mastery",
-      description: "Advanced React patterns and best practices",
-      progress: 90,
-      lastEdited: "3 days ago",
-      thumbnail: "bg-gradient-to-br from-orange-500 to-red-500",
-      status: "Near Completion",
-      slug: "react-mastery"
-    }
-  ]);
+interface Roadmap {
+  id: string;
+  prompt: string;
+  createdAt: string;
+  updatedAt: string;
+  stages: any[];
+}
 
+export default function LandingPage() {
+  const router = useRouter();
+  const [prompt, setPrompt] = useState("");
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [userRoadmaps, setUserRoadmaps] = useState<Roadmap[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [publicRoadmaps, setPublicRoadmaps] = useState([
     {
       id: 1,
@@ -102,11 +84,124 @@ export default function LandingPage() {
     }
   ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log("Creating roadmap for:", prompt);
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/session');
+      const data = await response.json();
+      
+      if (data.user) {
+        setIsSignedIn(true);
+        setUser(data.user);
+        fetchUserRoadmaps();
+      } else {
+        setIsSignedIn(false);
+        setUser(null);
+        setUserRoadmaps([]);
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      setIsSignedIn(false);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const fetchUserRoadmaps = async () => {
+    try {
+      const response = await fetch('/api/user-roadmap');
+      if (response.ok) {
+        const data = await response.json();
+        setUserRoadmaps(data.roadmaps || []);
+      }
+    } catch (error) {
+      console.error('Error fetching user roadmaps:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isSignedIn) {
+      // Redirect to login if not authenticated
+      router.push('/auth/sign-in');
+      return;
+    }
+
+    if (!prompt.trim()) return;
+
+    try {
+      // Create new roadmap
+      const response = await fetch('/api/roadmap/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to the new roadmap
+        router.push(`/dashboard/${data.roadmap.id}`);
+      } else {
+        console.error('Failed to create roadmap');
+      }
+    } catch (error) {
+      console.error('Error creating roadmap:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' });
+      setIsSignedIn(false);
+      setUser(null);
+      setUserRoadmaps([]);
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleSignIn = () => {
+    router.push('/auth/sign-in');
+  };
+
+  const handleViewRoadmap = (roadmapId: string) => {
+    router.push(`/dashboard/${roadmapId}`);
+  };
+
+  const getProgressPercentage = (stages: any[]) => {
+    if (!stages || stages.length === 0) return 0;
+    const completedStages = stages.filter(stage => stage.isCompleted).length;
+    return Math.round((completedStages / stages.length) * 100);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 relative overflow-hidden">
@@ -158,12 +253,38 @@ export default function LandingPage() {
               <Award className="w-4 h-4 mr-2" />
               Get free credits
             </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">R</span>
+            
+            {isSignedIn ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-semibold">
+                      {user?.name?.[0] || user?.email?.[0] || 'U'}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-black">
+                    {user?.name || user?.email || 'User'}
+                  </span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="text-black hover:bg-black/5"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
               </div>
-              <span className="text-sm font-medium text-black">Romaric's Sabi AI</span>
-            </div>
+            ) : (
+              <Button 
+                onClick={handleSignIn}
+                className="bg-black hover:bg-gray-800 text-white"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            )}
           </motion.div>
         </div>
       </nav>
@@ -201,10 +322,13 @@ export default function LandingPage() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Ask Sabi AI to create a learning roadmap for..."
+                  placeholder={isSignedIn ? "Ask Sabi AI to create a learning roadmap for..." : "Sign in to create learning roadmaps..."}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full h-16 pl-6 pr-32 text-lg bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400 shadow-xl"
+                  disabled={!isSignedIn}
+                  className={`w-full h-16 pl-6 pr-32 text-lg bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400 shadow-xl ${
+                    !isSignedIn ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 />
                 
                 {/* Internal Icons */}
@@ -221,15 +345,15 @@ export default function LandingPage() {
               {/* Bottom Controls */}
               <div className="flex items-center justify-between mt-4 px-2">
                 <div className="flex items-center space-x-3">
-                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5">
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5" disabled={!isSignedIn}>
                     <Plus className="w-4 h-4 mr-1" />
                     Add
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5">
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5" disabled={!isSignedIn}>
                     <Globe className="w-4 h-4 mr-1" />
                     Public
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5">
+                  <Button variant="ghost" size="sm" className="h-8 px-3 text-black hover:bg-black/5" disabled={!isSignedIn}>
                     <Zap className="w-4 h-4 mr-1" />
                     AI Powered
                     <ChevronDown className="w-3 h-3 ml-1" />
@@ -240,7 +364,12 @@ export default function LandingPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-14 h-14 bg-black hover:bg-gray-800 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                  disabled={!isSignedIn || !prompt.trim()}
+                  className={`w-14 h-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 ${
+                    isSignedIn && prompt.trim() 
+                      ? 'bg-black hover:bg-gray-800 text-white' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
                   <ArrowUp className="w-6 h-6" />
                 </Button>
@@ -291,7 +420,7 @@ export default function LandingPage() {
       </main>
 
       {/* Romaric's Sabi AI's Workspace */}
-      {isSignedIn && (
+      {isSignedIn && userRoadmaps.length > 0 && (
         <motion.section 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -301,7 +430,9 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto">
             <div className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-8 shadow-2xl">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-black">Romaric's Sabi AI's Workspace</h2>
+                <h2 className="text-2xl font-bold text-black">
+                  {user?.name || user?.email}'s Sabi AI's Workspace
+                </h2>
               </div>
               
               {/* Search and Filters */}
@@ -336,69 +467,81 @@ export default function LandingPage() {
 
               {/* My Roadmaps Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userRoadmaps.map((roadmap, index) => (
-                  <motion.div
-                    key={roadmap.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 1.2 + index * 0.1 }}
-                    className="group cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                  >
-                    {/* Thumbnail */}
-                    <div className={`h-32 ${roadmap.thumbnail} rounded-t-2xl relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-black/10" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <h3 className="text-lg font-semibold mb-2">{roadmap.title}</h3>
-                          <p className="text-sm opacity-90">{roadmap.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-medium text-gray-600">{roadmap.status}</span>
-                        <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
-                            <Eye className="w-4 h-4 text-gray-600" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
-                            <Edit3 className="w-4 h-4 text-gray-600" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
-                            <MoreHorizontal className="w-4 h-4 text-gray-600" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {/* Progress Bar */}
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-gray-600">Progress</span>
-                          <span className="text-xs font-semibold text-black">{roadmap.progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="h-2 bg-black rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: `${roadmap.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Footer */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-semibold">R</span>
+                {userRoadmaps.map((roadmap, index) => {
+                  const progress = getProgressPercentage(roadmap.stages);
+                  const status = progress === 100 ? 'Completed' : progress > 0 ? 'In Progress' : 'Not Started';
+                  
+                  return (
+                    <motion.div
+                      key={roadmap.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 1.2 + index * 0.1 }}
+                      className="group cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                      onClick={() => handleViewRoadmap(roadmap.id)}
+                    >
+                      {/* Thumbnail */}
+                      <div className="h-32 bg-gradient-to-br from-blue-500 to-green-500 rounded-t-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-black/10" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <h3 className="text-lg font-semibold mb-2">{roadmap.prompt}</h3>
+                            <p className="text-sm opacity-90">{status}</p>
                           </div>
-                          <span className="text-sm text-gray-600">{roadmap.slug}</span>
                         </div>
-                        <span className="text-xs text-gray-500">Edited {roadmap.lastEdited}</span>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      
+                      {/* Content */}
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium text-gray-600">{status}</span>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
+                              <Eye className="w-4 h-4 text-gray-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
+                              <Edit3 className="w-4 h-4 text-gray-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-black/5">
+                              <MoreHorizontal className="w-4 h-4 text-gray-600" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-600">Progress</span>
+                            <span className="text-xs font-semibold text-black">{progress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="h-2 bg-black rounded-full transition-all duration-1000 ease-out"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-semibold">
+                                {user?.name?.[0] || user?.email?.[0] || 'U'}
+                              </span>
+                            </div>
+                            <span className="text-sm text-gray-600">
+                              {roadmap.prompt.toLowerCase().replace(/\s+/g, '-').substring(0, 20)}...
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {formatDate(roadmap.updatedAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -536,10 +679,25 @@ export default function LandingPage() {
             Create your first AI-powered learning roadmap and begin mastering new skills today.
           </p>
           <div className="flex items-center justify-center space-x-4">
-            <Button size="lg" className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-              <Sparkles className="w-5 h-5 mr-2" />
-              Get Started Free
-            </Button>
+            {isSignedIn ? (
+              <Button 
+                size="lg" 
+                onClick={() => router.push('/dashboard')}
+                className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Go to Dashboard
+              </Button>
+            ) : (
+              <Button 
+                size="lg" 
+                onClick={handleSignIn}
+                className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Get Started Free
+              </Button>
+            )}
             <Button variant="outline" size="lg" className="border-2 border-black/20 text-black hover:bg-black/5 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300">
               View Examples
               <ArrowRight className="w-5 h-5 ml-2" />
