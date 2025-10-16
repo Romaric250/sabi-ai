@@ -349,7 +349,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
           >
             <h1 className="text-5xl md:text-7xl font-bold text-black mb-6 leading-tight">
               Learn Anything with
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> AI</span>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Sabi.AI</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Create personalized learning roadmaps powered by AI. Get structured, interactive lessons tailored to your goals.
