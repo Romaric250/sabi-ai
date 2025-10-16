@@ -21,7 +21,7 @@ export default async function authMiddleware(request: NextRequest) {
     const { data: session } = await betterFetch<Session>(
       "/api/auth/get-session",
       {
-        baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+        baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sabi-ai-orcin.vercel.app",
         headers: {
           cookie: request.headers.get("cookie") || "",
         },
