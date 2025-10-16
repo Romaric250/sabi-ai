@@ -29,15 +29,15 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
           
           {/* Main Layout: Sidebar + Content */}
           <div className="flex relative z-10">
-            {/* Enhanced Sidebar */}
-            <div className="w-80 bg-white/90 backdrop-blur-2xl border-r border-gray-200/60 min-h-screen shadow-2xl relative">
+            {/* Enhanced Sidebar - Fixed Position */}
+            <div className="fixed left-0 top-0 w-80 h-screen bg-white/90 backdrop-blur-2xl border-r border-gray-200/60 shadow-2xl z-20 overflow-y-auto hidden md:block">
               {/* Subtle sidebar accent */}
               <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-300/50 to-transparent" />
               <DashboardSidebar />
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 p-8 relative">
+            {/* Main Content - Offset for Fixed Sidebar on Desktop */}
+            <div className="flex-1 md:ml-80 p-8 relative">
               <div className="max-w-7xl mx-auto">
                 {children}
               </div>
