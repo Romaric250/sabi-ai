@@ -379,7 +379,10 @@ export async function POST(request: NextRequest) {
       if (bestMatch.similarity >= 0.8) {
         console.log("Found similar roadmap, returning cached result");
         return NextResponse.json({
-          roadmap: bestMatch.content,
+          roadmap: {
+            ...bestMatch.content,
+            id: bestMatch.id
+          },
           cached: true,
           similarity: bestMatch.similarity,
           originalPrompt: bestMatch.prompt,
@@ -403,7 +406,10 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({
         success: true,
-        roadmap,
+        roadmap: {
+          ...roadmap,
+          id: roadmapId
+        },
         roadmapId,
         prompt,
         cached: false,
