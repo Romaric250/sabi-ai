@@ -116,13 +116,13 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!prompt.trim()) return;
+
     if (!isSignedIn) {
       // Redirect to login if not authenticated
       router.push('/auth/sign-in');
       return;
     }
-
-    if (!prompt.trim()) return;
 
     try {
       const response = await fetch('/api/roadmap/generate', {

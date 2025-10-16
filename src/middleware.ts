@@ -4,11 +4,18 @@ import type { Session } from "@/lib/auth";
 
 const authRoutes = ["/auth/sign-in", "/auth/sign-up"];
 const passwordRoutes = ["/auth/reset-password", "/auth/forgot-password"];
+const publicRoutes = ["/", "/roadmap"]; // Allow landing page and roadmap page without auth
 
 export default async function authMiddleware(request: NextRequest) {
   const pathName = request.nextUrl.pathname;
   const isAuthRoute = authRoutes.includes(pathName);
   const isPasswordRoute = passwordRoutes.includes(pathName);
+  const isPublicRoute = publicRoutes.includes(pathName);
+
+  // Allow public routes without authentication
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
   try {
     const { data: session } = await betterFetch<Session>(
@@ -25,6 +32,7 @@ export default async function authMiddleware(request: NextRequest) {
       if (isAuthRoute || isPasswordRoute) {
         return NextResponse.next();
       }
+      // Redirect to sign-in only for protected routes
       return NextResponse.redirect(new URL("/auth/sign-in", request.url));
     }
 
@@ -34,7 +42,7 @@ export default async function authMiddleware(request: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    if (isAuthRoute || isPasswordRoute) {
+    if (isAuthRoute || isPasswordRoute || isPublicRoute) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL("/auth/sign-in", request.url));
