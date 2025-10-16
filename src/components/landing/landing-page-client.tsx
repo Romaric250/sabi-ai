@@ -223,7 +223,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-10 px-6 py-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-white/90 backdrop-blur-md border-b border-gray-200/60">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <motion.div 
@@ -339,7 +339,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative z-10 px-6 py-16">
+      <main className="relative z-10 px-6 py-16 pt-24">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
