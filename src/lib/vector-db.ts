@@ -154,24 +154,9 @@ export async function findSimilarRoadmaps(
   limit: number = 5
 ): Promise<VectorSimilarityResult[]> {
   try {
-    // First, try exact hash match
-    const hash = crypto.createHash("sha256").update(prompt).digest("hex");
-    const exactMatch = await prisma.roadmap.findUnique({
-      where: { id: hash },
-    });
-
-    if (exactMatch) {
-      return [
-        {
-          id: exactMatch.id,
-          prompt: exactMatch.prompt,
-          content: exactMatch.content,
-          similarity: 1.0,
-        },
-      ];
-    }
-
-    // If no exact match, perform vector similarity search
+    // Skip exact hash match to allow for more diverse content generation
+    // Only use vector similarity search for better content variety
+    
     const embedding = await generateEmbeddings(prompt);
 
     const similarRoadmaps = await prisma.$queryRaw<VectorSimilarityResult[]>`
