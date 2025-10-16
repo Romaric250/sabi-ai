@@ -42,6 +42,7 @@ export default function RoadmapPage() {
   const [selectedStage, setSelectedStage] = useState<RoadmapStage | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isCompletingStage, setIsCompletingStage] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -137,6 +138,7 @@ export default function RoadmapPage() {
 
   const handleStageComplete = async (stageId: string) => {
     console.log('handleStageComplete called with stageId:', stageId);
+    setIsCompletingStage(stageId);
     
     try {
       // Update local state immediately for better UX
@@ -193,26 +195,28 @@ export default function RoadmapPage() {
         // Dispatch custom event to notify sidebar of progress update
         window.dispatchEvent(new CustomEvent('roadmapProgressUpdated', {
           detail: { roadmapId: params.id }
-        }));
-      }
-    } catch (error) {
-      console.error('Error updating progress:', error);
-      // Revert local state if there was an error
-      setStages(prevStages => 
-        prevStages.map((stage, index) => {
-          if (stage.id === stageId) {
-            return { ...stage, isCompleted: false };
-          }
-          // Revert next stage unlock
-          const stageIndex = prevStages.findIndex(s => s.id === stageId);
-          if (index === stageIndex + 1) {
-            return { ...stage, isUnlocked: false };
-          }
-          return stage;
-        })
-      );
+        })      );
     }
-  };
+  } catch (error) {
+    console.error('Error updating progress:', error);
+    // Revert local state if there was an error
+    setStages(prevStages => 
+      prevStages.map((stage, index) => {
+        if (stage.id === stageId) {
+          return { ...stage, isCompleted: false };
+        }
+        // Revert next stage unlock
+        const stageIndex = prevStages.findIndex(s => s.id === stageId);
+        if (index === stageIndex + 1) {
+          return { ...stage, isUnlocked: false };
+        }
+        return stage;
+      })
+    );
+  } finally {
+    setIsCompletingStage(null);
+  }
+};
 
   const getProgressStats = () => {
     if (stages.length === 0) return { completed: 0, total: 0, percentage: 0 };

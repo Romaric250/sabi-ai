@@ -8,9 +8,16 @@ import { motion } from "framer-motion";
 export default function DashboardPage() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+    // Simulate loading time for better UX
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const stats = [
@@ -165,6 +172,128 @@ export default function DashboardPage() {
   ];
 
   if (!mounted) return null;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-in fade-in-up duration-1000">
+        {/* Loading Welcome Section */}
+        <div className="text-center py-16 relative">
+          <div className="max-w-4xl mx-auto relative z-10">
+            <div className="inline-flex items-center space-x-2 bg-gray-200/60 px-6 py-3 rounded-full mb-8 animate-pulse">
+              <div className="w-5 h-5 bg-gray-300 rounded-full" />
+              <div className="h-4 bg-gray-300 rounded w-32" />
+            </div>
+            
+            <div className="h-12 bg-gray-200/60 rounded-lg mb-6 animate-pulse" />
+            <div className="h-6 bg-gray-200/60 rounded-lg mb-10 max-w-3xl mx-auto animate-pulse" />
+          </div>
+        </div>
+
+        {/* Loading Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, index) => (
+            <div
+              key={index}
+              className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-6 animate-pulse"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gray-200/60 rounded-2xl" />
+                <div className="h-6 bg-gray-200/60 rounded-full w-20" />
+              </div>
+              <div className="h-4 bg-gray-200/60 rounded mb-1 w-24" />
+              <div className="h-8 bg-gray-200/60 rounded w-16" />
+            </div>
+          ))}
+        </div>
+
+        {/* Loading Workspace Section */}
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-8 shadow-2xl">
+          <div className="h-8 bg-gray-200/60 rounded-lg mb-8 w-64 animate-pulse" />
+          
+          {/* Loading Search and Filters */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4 flex-1">
+              <div className="h-12 bg-gray-200/60 rounded-2xl w-80 animate-pulse" />
+              <div className="flex items-center space-x-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-8 bg-gray-200/60 rounded-full w-24 animate-pulse" />
+                ))}
+              </div>
+            </div>
+            <div className="h-8 bg-gray-200/60 rounded w-16 animate-pulse" />
+          </div>
+
+          {/* Loading Roadmaps Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <div
+                key={index}
+                className="bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl animate-pulse"
+              >
+                <div className="h-32 bg-gray-200/60 rounded-t-2xl" />
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-5 bg-gray-200/60 rounded w-3/4" />
+                    <div className="w-8 h-8 bg-gray-200/60 rounded-full" />
+                  </div>
+                  <div className="h-2 bg-gray-200/60 rounded-full mb-2" />
+                  <div className="h-4 bg-gray-200/60 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading Community Section */}
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-8 shadow-2xl">
+          <div className="h-8 bg-gray-200/60 rounded-lg mb-8 w-64 animate-pulse" />
+          
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <div className="h-8 bg-gray-200/60 rounded-full w-20 animate-pulse" />
+              <div className="flex items-center space-x-2">
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className="h-8 bg-gray-200/60 rounded-full w-16 animate-pulse" />
+                ))}
+              </div>
+            </div>
+            <div className="h-8 bg-gray-200/60 rounded w-16 animate-pulse" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, index) => (
+              <div
+                key={index}
+                className="bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl animate-pulse"
+              >
+                <div className="h-32 bg-gray-200/60 rounded-t-2xl" />
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="h-3 bg-gray-200/60 rounded w-16" />
+                    <div className="h-3 bg-gray-200/60 rounded w-12" />
+                  </div>
+                  <div className="h-5 bg-gray-200/60 rounded mb-2 w-3/4" />
+                  <div className="h-3 bg-gray-200/60 rounded mb-3 w-1/2" />
+                  <div className="h-8 bg-gray-200/60 rounded w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading CTA Section */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-gray-200 to-gray-300 rounded-3xl p-12 text-center animate-pulse">
+          <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-8" />
+          <div className="h-10 bg-gray-300 rounded-lg mb-6 w-96 mx-auto" />
+          <div className="h-6 bg-gray-300 rounded-lg mb-10 max-w-3xl mx-auto" />
+          <div className="flex items-center justify-center space-x-6">
+            <div className="h-12 bg-gray-300 rounded-2xl w-48" />
+            <div className="h-12 bg-gray-300 rounded-2xl w-48" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in-up duration-1000">

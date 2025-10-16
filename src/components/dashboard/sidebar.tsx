@@ -285,13 +285,23 @@ export default function DashboardSidebar() {
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button 
-                  className="w-full bg-black hover:bg-gray-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-10 text-sm font-semibold rounded-xl relative overflow-hidden group cursor-pointer"
+                  disabled={isCreating}
+                  className="w-full bg-black hover:bg-gray-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-10 text-sm font-semibold rounded-xl relative overflow-hidden group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {/* Button glow effect */}
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl" />
                   <div className="relative z-10 flex items-center">
-                    <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                    New Roadmap
+                    {isCreating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                        New Roadmap
+                      </>
+                    )}
                   </div>
                 </Button>
               </SheetTrigger>
@@ -359,7 +369,14 @@ export default function DashboardSidebar() {
                     transition={{ duration: 0.5, delay: i * 0.1 }}
                     className="animate-pulse"
                   >
-                    <div className="h-28 bg-gray-200/60 rounded-2xl" />
+                    <div className="p-3 bg-white/90 backdrop-blur-sm border border-gray-200/60 rounded-xl">
+                      {/* Title skeleton */}
+                      <div className="h-4 bg-gray-200/60 rounded-lg mb-2 w-3/4" />
+                      {/* Progress bar skeleton */}
+                      <div className="h-2 bg-gray-200/60 rounded-full mb-2" />
+                      {/* Date skeleton */}
+                      <div className="h-3 bg-gray-200/60 rounded-lg w-1/2" />
+                    </div>
                   </motion.div>
                 ))}
               </div>
