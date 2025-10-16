@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { 
   Heart, 
   Search, 
@@ -62,7 +63,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Fetch roadmaps function
-  const fetchRoadmaps = async () => {
+  const fetchRoadmaps = useCallback(async () => {
     try {
       // Fetch user's roadmaps if signed in
       if (isSignedIn) {
@@ -95,7 +96,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
     } catch (error) {
       console.error('Error fetching roadmaps:', error);
     }
-  };
+  }, [isSignedIn]);
 
   // Fetch roadmaps when component mounts or auth state changes
   useEffect(() => {
@@ -192,7 +193,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
 
   const handleSignOut = async () => {
     try {
-      await fetch('/api/auth/sign-out', { method: 'POST' });
+      await authClient.signOut();
       setIsSignedIn(false);
       setUser(null);
       setUserRoadmaps([]);
@@ -284,22 +285,30 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     <button
-                      onClick={() => router.push('/dashboard')}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        router.push('/dashboard');
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 cursor-pointer"
                     >
                       <User className="w-4 h-4" />
                       <span>Dashboard</span>
                     </button>
                     <button
-                      onClick={() => router.push('/settings')}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Settings</span>
-                    </button>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                      onClick={async () => {
+                        setShowUserMenu(false);
+                        try {
+                          await authClient.signOut();
+                          setIsSignedIn(false);
+                          setUser(null);
+                          setUserRoadmaps([]);
+                          router.push('/');
+                          router.refresh();
+                        } catch (error) {
+                          console.error('Error signing out:', error);
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
@@ -551,7 +560,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                                 </div>
                                 <div className="flex items-center space-x-1">
                                   <Target className="w-4 h-4" />
-                                  <span>{roadmap.stages?.length || 0} stages</span>
+                                  <span>{typeof roadmap.stages === 'number' ? roadmap.stages : roadmap.stages?.length || 0} stages</span>
                                 </div>
                               </div>
                           
@@ -564,7 +573,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                                     </span>
                                   </div>
                                   <span className="text-sm text-gray-600">
-                                    {roadmap.prompt.toLowerCase().replace(/\s+/g, '-').substring(0, 20)}...
+                                    {(roadmap.prompt || roadmap.title || '').toLowerCase().replace(/\s+/g, '-').substring(0, 20)}...
                                   </span>
                                 </div>
                                 <span className="text-xs text-gray-500">
@@ -653,14 +662,14 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                           <div className="flex items-center space-x-2">
                             <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                               <span className="text-gray-600 text-xs font-semibold">
-                                {roadmap.creator[0]}
+                                {(roadmap as any).creator?.[0] || 'C'}
                               </span>
                             </div>
-                            <span className="text-xs text-gray-600">{roadmap.creator}</span>
+                            <span className="text-xs text-gray-600">{(roadmap as any).creator || 'Community'}</span>
                           </div>
                           <div className="flex items-center space-x-1 text-gray-500">
                             <Users className="w-3 h-3" />
-                            <span className="text-xs">{roadmap.totalLearners}</span>
+                            <span className="text-xs">{(roadmap as any).totalLearners || 0}</span>
                           </div>
                         </div>
                         

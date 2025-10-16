@@ -51,7 +51,7 @@ export function InteractiveHero() {
     };
     
     typeText();
-  }, [currentExample]);
+  }, [currentExample, examples]);
 
   const handleMouseMove = (event: React.MouseEvent) => {
     const rect = event.currentTarget.getBoundingClientRect();

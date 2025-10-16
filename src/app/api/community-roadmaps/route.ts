@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
         // Exclude current user's roadmaps if authenticated
         ...(currentUserId ? { userId: { not: currentUserId } } : {}),
         // Only include roadmaps that have content
-        content: { not: null },
+        content: { not: null as any },
       },
       include: {
         user: {

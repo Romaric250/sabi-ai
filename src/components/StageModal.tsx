@@ -141,7 +141,7 @@ export function StageModal({ stage, isOpen, onClose, onComplete }: StageModalPro
                   <h3 className="text-lg font-semibold text-black mb-4">Study Materials</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {stage.materials.map((material, index) => (
-                      <StudyMaterialCard key={index} material={material} />
+                      <StudyMaterialCard key={index} material={material} index={index} />
                     ))}
                   </div>
                 </div>
@@ -207,7 +207,12 @@ export function StageModal({ stage, isOpen, onClose, onComplete }: StageModalPro
               {currentTab === "chat" && (
                 <div>
                   <h3 className="text-lg font-semibold text-black mb-4">AI Tutor</h3>
-                  <StageChatInterface stage={stage} />
+                  <StageChatInterface 
+                    onClose={() => setCurrentTab("lessons")}
+                    context={stage.description}
+                    stageId={stage.id}
+                    stageTitle={stage.title}
+                  />
                 </div>
               )}
             </div>

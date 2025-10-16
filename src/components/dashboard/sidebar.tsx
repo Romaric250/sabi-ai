@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/components/session";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
+import { authClient } from "@/lib/auth-client";
 import { 
   Plus, 
   BookOpen, 
@@ -65,7 +66,7 @@ export default function DashboardSidebar() {
     return 0;
   };
 
-  const fetchAllRoadmapProgress = async () => {
+  const fetchAllRoadmapProgress = useCallback(async () => {
     const progressPromises = roadmaps.map(async (roadmap) => {
       const progress = await fetchRoadmapProgress(roadmap.id);
       return { roadmapId: roadmap.id, progress };
@@ -78,7 +79,7 @@ export default function DashboardSidebar() {
     });
     
     setRoadmapProgress(progressMap);
-  };
+  }, [roadmaps]);
 
   useEffect(() => {
     setMounted(true);
@@ -130,7 +131,7 @@ export default function DashboardSidebar() {
     }
   }, [searchQuery, roadmaps]);
 
-  const fetchRoadmaps = async () => {
+  const fetchRoadmaps = useCallback(async () => {
     try {
       const data = await roadMapApi.getUserRoadmaps(session?.user?.id || "");
       // Sort by creation date (newest first) and limit to recent 5
@@ -147,7 +148,7 @@ export default function DashboardSidebar() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session?.user?.id, fetchAllRoadmapProgress]);
 
   const createNewRoadmap = async () => {
     if (!newRoadmapPrompt.trim()) return;
@@ -197,7 +198,7 @@ export default function DashboardSidebar() {
 
   const handleSignOut = async () => {
     try {
-      await fetch('/api/auth/sign-out', { method: 'POST' });
+      await authClient.signOut();
       router.push('/');
       router.refresh();
     } catch (error) {

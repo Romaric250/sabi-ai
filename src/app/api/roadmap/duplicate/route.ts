@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { createHash } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,11 +39,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid roadmap content" }, { status: 400 });
     }
 
+    // Generate a unique prompt hash for the duplicated roadmap
+    const duplicatedPrompt = `${originalRoadmap.prompt} (Copy)`;
+    const promptHash = createHash('sha256').update(duplicatedPrompt).digest('hex');
+
     // Create a new roadmap for the user based on the original
     const newRoadmap = await prisma.roadmap.create({
       data: {
-        prompt: originalRoadmap.prompt,
-        content: originalRoadmap.content,
+        prompt: duplicatedPrompt,
+        promptHash: promptHash,
+        content: originalRoadmap.content as any,
         userId: userId,
       },
     });

@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest) {
       data: {
         completedStages,
         progress: {
-          startedAt: userRoadmap.progress?.startedAt || new Date().toISOString(),
+          startedAt: (userRoadmap.progress as any)?.startedAt || new Date().toISOString(),
           totalStages,
           completedStages,
           progressPercentage,
@@ -190,8 +190,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       progress: {
         completed: userRoadmap.completedStages?.length || 0,
-        total: userRoadmap.progress?.totalStages || 0,
-        percentage: userRoadmap.progress?.progressPercentage || 0,
+        total: (userRoadmap.progress as any)?.totalStages || 0,
+        percentage: (userRoadmap.progress as any)?.progressPercentage || 0,      
         completedStages: userRoadmap.completedStages || [],
         isCompleted: userRoadmap.isCompleted,
       },

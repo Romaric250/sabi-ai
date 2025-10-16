@@ -25,7 +25,8 @@ export function ParallaxText({
   });
 
   const y = useTransform(scrollYProgress, [0, 1], direction === "up" ? [100, -100] : [-100, 100]);
-  const scaleValue = scale ? useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1.2, 0.8]) : 1;
+  const scaleTransform = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1.2, 0.8]);
+  const scaleValue = scale ? scaleTransform : 1;
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
 
   return (

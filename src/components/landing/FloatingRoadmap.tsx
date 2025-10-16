@@ -48,7 +48,6 @@ export function FloatingRoadmap() {
             animate={{ 
               opacity: 1, 
               scale: 1, 
-              y: 0,
               x: xOffset,
               y: yOffset
             }}

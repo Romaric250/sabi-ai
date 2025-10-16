@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Clock, Users, BookOpen, ArrowRight, Star } from "lucide-react";
 import { useTempSession } from "@/lib/temp-auth-client";
@@ -30,7 +30,7 @@ export function SampleRoadmaps({ onSelectRoadmap }: SampleRoadmapsProps) {
   const { data } = useTempSession();
   const isAuthenticated = !!data?.user;
 
-  const fetchSampleRoadmaps = async () => {
+  const fetchSampleRoadmaps = useCallback(async () => {
     try {
       const response = await fetch("/api/sample-roadmaps");
       if (response.ok) {
@@ -46,7 +46,7 @@ export function SampleRoadmaps({ onSelectRoadmap }: SampleRoadmapsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchSampleRoadmaps();
