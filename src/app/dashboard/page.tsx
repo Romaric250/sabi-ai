@@ -48,20 +48,20 @@ export default function DashboardPage() {
         setUserRoadmaps([]);
       }
 
-      // Fetch community roadmaps (excluding current user's)
-      const communityResponse = await fetch('/api/sample-roadmaps');
-      console.log('Community roadmaps response:', communityResponse.status);
-      if (communityResponse.ok) {
-        const roadmaps = await communityResponse.json();
-        console.log('Community roadmaps data:', roadmaps);
-        // Get 4 random roadmaps
-        const shuffled = roadmaps.sort(() => 0.5 - Math.random());
-        setCommunityRoadmaps(shuffled.slice(0, 4));
-        console.log('Set community roadmaps:', shuffled.slice(0, 4));
-      } else {
-        console.error('Failed to fetch community roadmaps:', communityResponse.status);
-        setCommunityRoadmaps([]);
-      }
+        // Fetch community roadmaps (real roadmaps from database)
+        const communityResponse = await fetch('/api/community-roadmaps');
+        console.log('Community roadmaps response:', communityResponse.status);
+        if (communityResponse.ok) {
+          const roadmaps = await communityResponse.json();
+          console.log('Community roadmaps data:', roadmaps);
+          // Get 4 random roadmaps
+          const shuffled = roadmaps.sort(() => 0.5 - Math.random());
+          setCommunityRoadmaps(shuffled.slice(0, 4));
+          console.log('Set community roadmaps:', shuffled.slice(0, 4));
+        } else {
+          console.error('Failed to fetch community roadmaps:', communityResponse.status);
+          setCommunityRoadmaps([]);
+        }
     } catch (error) {
       console.error('Error fetching roadmaps:', error);
     } finally {
@@ -581,8 +581,13 @@ export default function DashboardPage() {
               <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-t-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <h3 className="text-lg font-semibold mb-2">{roadmap.prompt || roadmap.title}</h3>
+                  <div className="text-center text-white px-4">
+                    <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                      {(() => {
+                        const title = roadmap.prompt || roadmap.title;
+                        return title && title.length > 50 ? `${title.substring(0, 50)}...` : title;
+                      })()}
+                    </h3>
                     <p className="text-sm opacity-90">Community</p>
                   </div>
                 </div>
@@ -595,8 +600,18 @@ export default function DashboardPage() {
                   <span className="text-xs text-gray-500">{typeof roadmap.stages === 'number' ? roadmap.stages : roadmap.stages?.length || 0} Stages</span>
                 </div>
                 
-                <h3 className="font-semibold text-black mb-2">{roadmap.prompt || roadmap.title}</h3>
-                <p className="text-xs text-gray-600 mb-3">{roadmap.description || 'Community Roadmap'}</p>
+                <h3 className="font-semibold text-black mb-2 line-clamp-2">
+                  {(() => {
+                    const title = roadmap.prompt || roadmap.title;
+                    return title && title.length > 60 ? `${title.substring(0, 60)}...` : title;
+                  })()}
+                </h3>
+                <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                  {(() => {
+                    const description = roadmap.description || 'Community Roadmap';
+                    return description && description.length > 80 ? `${description.substring(0, 80)}...` : description;
+                  })()}
+                </p>
                 
                 <Button variant="outline" size="sm" className="w-full border-gray-200/60 text-black hover:bg-black/5">
                   View Roadmap <ArrowRight className="w-3 h-3 ml-2" />

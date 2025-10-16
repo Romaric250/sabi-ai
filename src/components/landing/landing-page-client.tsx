@@ -58,6 +58,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
   const [userRoadmaps, setUserRoadmaps] = useState<Roadmap[]>([]);
   const [communityRoadmaps, setCommunityRoadmaps] = useState<Roadmap[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Fetch roadmaps function
@@ -81,8 +82,8 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
         }
       }
 
-      // Fetch community roadmaps
-      const communityResponse = await fetch('/api/sample-roadmaps');
+      // Fetch community roadmaps (real roadmaps from database)
+      const communityResponse = await fetch('/api/community-roadmaps');
       if (communityResponse.ok) {
         const roadmaps = await communityResponse.json();
         // Get 4 random roadmaps
@@ -119,12 +120,36 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
 
-  const handleRoadmapClick = (roadmapId: string) => {
+  const handleRoadmapClick = async (roadmapId: string, isCommunityRoadmap: boolean = false) => {
     if (!isSignedIn) {
       // Redirect to sign-in if not authenticated
       router.push('/auth/sign-in');
+      return;
+    }
+
+    if (isCommunityRoadmap) {
+      // For community roadmaps, duplicate them for the user first
+      try {
+        const response = await fetch('/api/roadmap/duplicate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ roadmapId: roadmapId }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Navigate to the newly created roadmap
+          router.push(`/dashboard/${data.roadmapId}`);
+        } else {
+          console.error('Failed to duplicate roadmap');
+        }
+      } catch (error) {
+        console.error('Error duplicating roadmap:', error);
+      }
     } else {
-      // Navigate to roadmap if authenticated
+      // For user roadmaps, navigate directly
       router.push(`/dashboard/${roadmapId}`);
     }
   };
@@ -140,6 +165,8 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
       return;
     }
 
+    setIsGenerating(true);
+    
     try {
       const response = await fetch('/api/roadmap/generate', {
         method: 'POST',
@@ -158,12 +185,14 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
       }
     } catch (error) {
       console.error('Error creating roadmap:', error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   const handleSignOut = async () => {
     try {
-      await fetch('/api/auth/signout', { method: 'POST' });
+      await fetch('/api/auth/sign-out', { method: 'POST' });
       setIsSignedIn(false);
       setUser(null);
       setUserRoadmaps([]);
@@ -331,17 +360,77 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                   placeholder="What do you want to learn? (e.g., JavaScript, Machine Learning, Spanish)"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full h-14 text-lg pl-6 pr-32 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300"
+                  disabled={isGenerating}
+                  className="w-full h-14 text-lg pl-6 pr-32 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <Button
                   type="submit"
-                  className="absolute right-2 top-2 h-10 px-6 bg-black hover:bg-gray-800 text-white rounded-xl"
+                  disabled={isGenerating}
+                  className="absolute right-2 top-2 h-10 px-6 bg-black hover:bg-gray-800 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate
+                  {isGenerating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                      Crafting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate
+                    </>
+                  )}
                 </Button>
               </div>
             </motion.form>
+
+            {/* Generating Roadmap Preview */}
+            {isGenerating && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-2xl mx-auto mb-8"
+              >
+                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                  {/* Code-like visual elements */}
+                  <div className="space-y-3 mb-4">
+                    {/* Top bars */}
+                    <div className="flex items-center space-x-2">
+                      <div className="h-2 bg-gray-600 rounded-full w-16"></div>
+                      <div className="h-2 bg-gray-600 rounded-full w-8"></div>
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="h-2 bg-teal-500 rounded-full w-12"></div>
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                    </div>
+                    
+                    {/* Middle bars */}
+                    <div className="space-y-2">
+                      <div className="h-2 bg-gray-600 rounded-full w-12"></div>
+                      <div className="h-2 bg-gray-600 rounded-full w-20"></div>
+                      <div className="h-2 bg-gray-600 rounded-full w-16"></div>
+                    </div>
+                    
+                    {/* Bottom elements */}
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="h-2 bg-gray-600 rounded-full w-8"></div>
+                      <div className="h-2 bg-teal-500 rounded-full w-6"></div>
+                      <div className="h-2 bg-gray-600 rounded-full w-10"></div>
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="h-2 bg-gray-600 rounded-full w-4"></div>
+                      <div className="w-1 h-4 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Text */}
+                  <div className="text-center">
+                    <h3 className="text-white text-lg font-semibold">Crafting your roadmap</h3>
+                    <p className="text-gray-400 text-sm mt-1">AI is analyzing your request and building a personalized learning path...</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Stats */}
             <motion.div
@@ -525,14 +614,18 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 1.6 + index * 0.1 }}
                       className="group cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                      onClick={() => handleRoadmapClick(roadmap.id)}
+                      onClick={() => handleRoadmapClick(roadmap.id, true)}
                     >
                       {/* Thumbnail */}
                       <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-t-2xl relative overflow-hidden">
                         <div className="absolute inset-0 bg-black/10" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <h3 className="text-lg font-semibold mb-2">{roadmap.prompt || roadmap.title}</h3>
+                          <div className="text-center text-white px-4">
+                            <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                              {roadmap.title && roadmap.title.length > 50 
+                                ? `${roadmap.title.substring(0, 50)}...` 
+                                : roadmap.title}
+                            </h3>
                             <p className="text-sm opacity-90">Community</p>
                           </div>
                         </div>
@@ -542,14 +635,37 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                       <div className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-gray-600">{roadmap.difficulty || 'Learning Path'}</span>
-                          <span className="text-xs text-gray-500">{typeof roadmap.stages === 'number' ? roadmap.stages : roadmap.stages?.length || 0} Stages</span>
+                          <span className="text-xs text-gray-500">{roadmap.stages} Stages</span>
                         </div>
                         
-                        <h3 className="font-semibold text-black mb-2">{roadmap.prompt || roadmap.title}</h3>
-                        <p className="text-xs text-gray-600 mb-3">{roadmap.description || 'Community Roadmap'}</p>
+                        <h3 className="font-semibold text-black mb-2 line-clamp-2">
+                          {roadmap.title && roadmap.title.length > 60 
+                            ? `${roadmap.title.substring(0, 60)}...` 
+                            : roadmap.title}
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                          {roadmap.description && roadmap.description.length > 80 
+                            ? `${roadmap.description.substring(0, 80)}...` 
+                            : roadmap.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                              <span className="text-gray-600 text-xs font-semibold">
+                                {roadmap.creator[0]}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-600">{roadmap.creator}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-gray-500">
+                            <Users className="w-3 h-3" />
+                            <span className="text-xs">{roadmap.totalLearners}</span>
+                          </div>
+                        </div>
                         
                         <Button variant="outline" size="sm" className="w-full border-gray-200/60 text-black hover:bg-black/5">
-                          {isSignedIn ? 'View Roadmap' : 'Sign In to View'} <ArrowRight className="w-3 h-3 ml-2" />
+                          {isSignedIn ? 'Start Learning' : 'Sign In to View'} <ArrowRight className="w-3 h-3 ml-2" />
                         </Button>
                       </div>
                     </motion.div>

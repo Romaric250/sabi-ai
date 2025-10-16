@@ -26,7 +26,8 @@ import {
   Star,
   Zap,
   Award,
-  Brain
+  Brain,
+  LogOut
 } from "lucide-react";
 import { roadMapApi } from "@/lib/api";
 
@@ -194,12 +195,18 @@ export default function DashboardSidebar() {
     return roadmapProgress[roadmap.id] || 0;
   };
 
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/sign-out', { method: 'POST' });
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   const navigationItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
-    { icon: BarChart3, label: "Analytics", href: "/analytics" },
-    { icon: Bell, label: "Notifications", href: "/notifications" },
-    { icon: HelpCircle, label: "Help & Support", href: "/help" },
-    { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
   if (!mounted) return null;
@@ -220,14 +227,15 @@ export default function DashboardSidebar() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex items-center space-x-3 mb-6"
+              className="flex items-center space-x-3 mb-6 cursor-pointer group"
+              onClick={() => router.push('/')}
             >
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-xl relative group cursor-pointer">
+              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-xl relative group-hover:scale-105 transition-transform duration-300">
                 <span className="text-white font-bold text-sm">S</span>
                 {/* Subtle glow effect */}
                 <div className="absolute inset-0 bg-black/30 rounded-xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
               </div>
-              <span className="text-lg font-bold text-black">Sabi AI</span>
+              <span className="text-lg font-bold text-black group-hover:text-gray-600 transition-colors duration-300">Sabi AI</span>
             </motion.div>
             
             {/* Enhanced User Info */}
@@ -252,6 +260,23 @@ export default function DashboardSidebar() {
                 </div>
               </div>
             </motion.div>
+          </motion.div>
+
+          {/* Sign Out Button */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mb-6"
+          >
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              className="w-full flex items-center space-x-2 text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all duration-300"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="text-sm font-medium">Sign Out</span>
+            </Button>
           </motion.div>
 
           {/* Enhanced Search Bar */}
@@ -514,11 +539,14 @@ export default function DashboardSidebar() {
             <div className="p-6 h-full flex flex-col">
               {/* Mobile Header */}
               <div className="mb-8">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-lg">
+                <div 
+                  className="flex items-center space-x-3 mb-6 cursor-pointer group"
+                  onClick={() => router.push('/')}
+                >
+                  <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                     <span className="text-white font-bold text-lg">S</span>
                   </div>
-                  <span className="text-2xl font-bold text-black">Sabi AI</span>
+                  <span className="text-2xl font-bold text-black group-hover:text-gray-600 transition-colors duration-300">Sabi AI</span>
                 </div>
                 
                 {/* User Info */}
@@ -536,6 +564,18 @@ export default function DashboardSidebar() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Sign Out Button */}
+              <div className="mb-6">
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  className="w-full flex items-center space-x-2 text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all duration-300"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm font-medium">Sign Out</span>
+                </Button>
               </div>
 
               {/* Search Bar */}
