@@ -37,10 +37,13 @@ import { Session } from "@/lib/auth";
 
 interface Roadmap {
   id: string;
-  prompt: string;
+  prompt?: string;
+  title?: string;
+  description?: string;
+  difficulty?: string;
+  stages?: any[] | number;
   createdAt: string;
   updatedAt: string;
-  stages: any[];
 }
 
 interface LandingPageClientProps {
@@ -53,63 +56,76 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
   const [isSignedIn, setIsSignedIn] = useState(!!session);
   const [user, setUser] = useState<any>(session?.user || null);
   const [userRoadmaps, setUserRoadmaps] = useState<Roadmap[]>([]);
+  const [communityRoadmaps, setCommunityRoadmaps] = useState<Roadmap[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [publicRoadmaps, setPublicRoadmaps] = useState([
-    {
-      id: 1,
-      title: "Machine Learning Fundamentals",
-      creator: "DataScience Pro",
-      remixes: 15420,
-      category: "AI & ML",
-      thumbnail: "bg-gradient-to-br from-indigo-500 to-purple-500",
-      slug: "ml-fundamentals"
-    },
-    {
-      id: 2,
-      title: "Web3 Development",
-      creator: "Blockchain Dev",
-      remixes: 8920,
-      category: "Blockchain",
-      thumbnail: "bg-gradient-to-br from-green-500 to-blue-500",
-      slug: "web3-development"
-    },
-    {
-      id: 3,
-      title: "Mobile App Development",
-      creator: "App Creator",
-      remixes: 12450,
-      category: "Mobile",
-      thumbnail: "bg-gradient-to-br from-pink-500 to-orange-500",
-      slug: "mobile-app-dev"
-    },
-    {
-      id: 4,
-      title: "DevOps Engineering",
-      creator: "Cloud Expert",
-      remixes: 6780,
-      category: "DevOps",
-      thumbnail: "bg-gradient-to-br from-yellow-500 to-green-500",
-      slug: "devops-engineering"
-    }
-  ]);
 
-  // Fetch user roadmaps when signed in
-  useEffect(() => {
-    if (isSignedIn) {
-      fetchUserRoadmaps();
-    }
-  }, [isSignedIn]);
-
-  const fetchUserRoadmaps = async () => {
+  // Fetch roadmaps function
+  const fetchRoadmaps = async () => {
     try {
-      const response = await fetch('/api/user-roadmap');
-      if (response.ok) {
-        const data = await response.json();
-        setUserRoadmaps(data.roadmaps || []);
+      // Fetch user's roadmaps if signed in
+      if (isSignedIn) {
+        const userResponse = await fetch('/api/user-roadmap', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (userResponse.ok) {
+          const roadmaps = await userResponse.json();
+          // Get 3 random roadmaps
+          const shuffled = roadmaps.sort(() => 0.5 - Math.random());
+          setUserRoadmaps(shuffled.slice(0, 3));
+        } else {
+          setUserRoadmaps([]);
+        }
+      }
+
+      // Fetch community roadmaps
+      const communityResponse = await fetch('/api/sample-roadmaps');
+      if (communityResponse.ok) {
+        const roadmaps = await communityResponse.json();
+        // Get 4 random roadmaps
+        const shuffled = roadmaps.sort(() => 0.5 - Math.random());
+        setCommunityRoadmaps(shuffled.slice(0, 4));
+      } else {
+        setCommunityRoadmaps([]);
       }
     } catch (error) {
-      console.error('Error fetching user roadmaps:', error);
+      console.error('Error fetching roadmaps:', error);
+    }
+  };
+
+  // Fetch roadmaps when component mounts or auth state changes
+  useEffect(() => {
+    fetchRoadmaps();
+  }, [isSignedIn]);
+
+  const getProgressPercentage = (roadmap: Roadmap) => {
+    if (!roadmap.stages || typeof roadmap.stages === 'number') return 0;
+    const completedStages = roadmap.stages.filter((stage: any) => stage.isCompleted).length;
+    return Math.round((completedStages / roadmap.stages.length) * 100);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
+  const handleRoadmapClick = (roadmapId: string) => {
+    if (!isSignedIn) {
+      // Redirect to sign-in if not authenticated
+      router.push('/auth/sign-in');
+    } else {
+      // Navigate to roadmap if authenticated
+      router.push(`/dashboard/${roadmapId}`);
     }
   };
 
@@ -165,24 +181,6 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
 
   const handleViewRoadmap = (roadmapId: string) => {
     router.push(`/dashboard/${roadmapId}`);
-  };
-
-  const getProgressPercentage = (stages: any[]) => {
-    if (!stages || stages.length === 0) return 0;
-    const completedStages = stages.filter(stage => stage.isCompleted).length;
-    return Math.round((completedStages / stages.length) * 100);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return '1 day ago';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-    return `${Math.ceil(diffDays / 30)} months ago`;
   };
 
   return (
@@ -417,7 +415,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                   {userRoadmaps.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {userRoadmaps.map((roadmap, index) => {
-                        const progress = getProgressPercentage(roadmap.stages);
+                        const progress = getProgressPercentage(roadmap);
                         const status = progress === 100 ? 'Completed' : progress > 0 ? 'In Progress' : 'Not Started';
                         
                         return (
@@ -495,14 +493,7 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                         <BookOpen className="w-8 h-8 text-black" />
                       </div>
                       <h3 className="text-lg font-semibold text-black mb-2">No roadmaps yet</h3>
-                      <p className="text-gray-600 mb-4">Create your first learning roadmap to get started</p>
-                      <Button 
-                        onClick={() => setPrompt("JavaScript fundamentals")}
-                        className="bg-black hover:bg-gray-800 text-white"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create First Roadmap
-                      </Button>
+                      <p className="text-gray-600 mb-4">No roadmaps available</p>
                     </div>
                   )}
                 </div>
@@ -527,52 +518,39 @@ export function LandingPageClient({ session }: LandingPageClientProps) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {publicRoadmaps.map((roadmap, index) => (
+                  {communityRoadmaps.map((roadmap, index) => (
                     <motion.div
                       key={roadmap.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 1.6 + index * 0.1 }}
                       className="group cursor-pointer bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                      onClick={() => handleRoadmapClick(roadmap.id)}
                     >
                       {/* Thumbnail */}
-                      <div className={`h-32 ${roadmap.thumbnail} rounded-t-2xl relative overflow-hidden`}>
+                      <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-t-2xl relative overflow-hidden">
                         <div className="absolute inset-0 bg-black/10" />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center text-white">
-                            <h3 className="text-lg font-semibold mb-2">{roadmap.title}</h3>
-                            <p className="text-sm opacity-90">{roadmap.category}</p>
+                            <h3 className="text-lg font-semibold mb-2">{roadmap.prompt || roadmap.title}</h3>
+                            <p className="text-sm opacity-90">Community</p>
                           </div>
                         </div>
                       </div>
                       
                       {/* Content */}
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                              <span className="text-gray-600 text-xs font-semibold">
-                                {roadmap.creator[0]}
-                              </span>
-                            </div>
-                            <span className="text-sm text-gray-600">{roadmap.creator}</span>
-                          </div>
-                          <div className="flex items-center space-x-1 text-yellow-500">
-                            <Star className="w-4 h-4 fill-current" />
-                            <span className="text-sm font-semibold">4.8</span>
-                          </div>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-gray-600">{roadmap.difficulty || 'Learning Path'}</span>
+                          <span className="text-xs text-gray-500">{typeof roadmap.stages === 'number' ? roadmap.stages : roadmap.stages?.length || 0} Stages</span>
                         </div>
                         
-                        <div className="flex items-center justify-between text-sm text-gray-500">
-                          <div className="flex items-center space-x-1">
-                            <Users className="w-4 h-4" />
-                            <span>{roadmap.remixes.toLocaleString()} remixes</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Eye className="w-4 h-4" />
-                            <span>View</span>
-                          </div>
-                        </div>
+                        <h3 className="font-semibold text-black mb-2">{roadmap.prompt || roadmap.title}</h3>
+                        <p className="text-xs text-gray-600 mb-3">{roadmap.description || 'Community Roadmap'}</p>
+                        
+                        <Button variant="outline" size="sm" className="w-full border-gray-200/60 text-black hover:bg-black/5">
+                          {isSignedIn ? 'View Roadmap' : 'Sign In to View'} <ArrowRight className="w-3 h-3 ml-2" />
+                        </Button>
                       </div>
                     </motion.div>
                   ))}
