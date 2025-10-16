@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
 
   // Create a highly specific context prompt for the stage
   const stageContextPrompt = `

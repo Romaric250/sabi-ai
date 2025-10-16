@@ -225,7 +225,7 @@ export default function DashboardSidebar() {
                 className="w-full pl-8 pr-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/50 focus:border-black/60 transition-all duration-300 placeholder:text-gray-400 shadow-sm text-sm"
               />
               {/* Search glow effect */}
-              <div className="absolute inset-0 rounded-2xl bg-black/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-xl" />
+              <div className="absolute inset-0 rounded-2xl bg-black/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-xl pointer-events-none" />
             </div>
           </motion.div>
 

@@ -22,7 +22,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function generateRoadmapWithAI(prompt: string): Promise<RoadmapStage[]> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
 
     const aiPrompt = `
 You are an expert educational AI that creates comprehensive learning roadmaps with rich content and resources.

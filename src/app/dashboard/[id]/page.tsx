@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { RoadmapStage } from "@/types/roadmap";
 import { SimpleCandyCrushRoadmap } from "@/components/SimpleCandyCrushRoadmap";
 import { StageModal } from "@/components/StageModal";
@@ -35,6 +35,7 @@ interface RoadmapData {
 
 export default function RoadmapPage() {
   const params = useParams();
+  const router = useRouter();
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
   const [stages, setStages] = useState<CompatibleRoadmapStage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,7 +211,7 @@ export default function RoadmapPage() {
           >
             <Button 
               variant="ghost" 
-              onClick={() => window.history.back()}
+              onClick={() => router.push('/dashboard')}
               className="mb-8 hover:bg-gray-100 transition-all duration-300 hover:shadow-lg"
             >
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
