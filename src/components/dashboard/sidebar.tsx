@@ -47,13 +47,76 @@ export default function DashboardSidebar() {
   const [isCreating, setIsCreating] = useState(false);
   const [newRoadmapPrompt, setNewRoadmapPrompt] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [roadmapProgress, setRoadmapProgress] = useState<Record<string, number>>({});
   const [hoveredRoadmap, setHoveredRoadmap] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  const fetchRoadmapProgress = async (roadmapId: string) => {
+    try {
+      const response = await fetch(`/api/user-roadmap/progress?roadmapId=${roadmapId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.progress?.percentage || 0;
+      }
+    } catch (error) {
+      console.error('Error fetching roadmap progress:', error);
+    }
+    return 0;
+  };
+
+  const fetchAllRoadmapProgress = async () => {
+    const progressPromises = roadmaps.map(async (roadmap) => {
+      const progress = await fetchRoadmapProgress(roadmap.id);
+      return { roadmapId: roadmap.id, progress };
+    });
+    
+    const results = await Promise.all(progressPromises);
+    const progressMap: Record<string, number> = {};
+    results.forEach(({ roadmapId, progress }) => {
+      progressMap[roadmapId] = progress;
+    });
+    
+    setRoadmapProgress(progressMap);
+  };
 
   useEffect(() => {
     setMounted(true);
     fetchRoadmaps();
-  }, []);
+    
+    // Set up interval to refresh progress every 30 seconds
+    const progressInterval = setInterval(() => {
+      if (roadmaps.length > 0) {
+        fetchAllRoadmapProgress();
+      }
+    }, 30000);
+    
+    return () => clearInterval(progressInterval);
+  }, [roadmaps.length]);
+
+  // Refresh progress when window regains focus (user returns from roadmap)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (roadmaps.length > 0) {
+        fetchAllRoadmapProgress();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [roadmaps.length]);
+
+  // Listen for progress updates from roadmap pages
+  useEffect(() => {
+    const handleProgressUpdate = (event: CustomEvent) => {
+      const { roadmapId } = event.detail;
+      if (roadmapId && roadmaps.some(r => r.id === roadmapId)) {
+        fetchAllRoadmapProgress();
+      }
+    };
+
+    window.addEventListener('roadmapProgressUpdated', handleProgressUpdate as EventListener);
+    return () => window.removeEventListener('roadmapProgressUpdated', handleProgressUpdate as EventListener);
+  }, [roadmaps]);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -75,6 +138,9 @@ export default function DashboardSidebar() {
         .slice(0, 5);
       setRoadmaps(sortedData);
       setFilteredRoadmaps(sortedData);
+      
+      // Fetch progress for all roadmaps
+      await fetchAllRoadmapProgress();
     } catch (error) {
       console.error("Error fetching roadmaps:", error);
     } finally {
@@ -124,28 +190,8 @@ export default function DashboardSidebar() {
   };
 
   const getProgressPercentage = (roadmap: Roadmap) => {
-    if (!roadmap.content) return 0;
-    
-    let stages: any[] = [];
-    const content = roadmap.content as any;
-    
-    if (Array.isArray(content)) {
-      stages = content;
-    } else if (content && typeof content === 'object') {
-      const keys = Object.keys(content);
-      if (keys.every(key => !isNaN(Number(key)))) {
-        stages = Object.values(content);
-      } else if (content?.roadmap && Array.isArray(content.roadmap)) {
-        stages = content.roadmap;
-      } else if (content?.stages && Array.isArray(content.stages)) {
-        stages = content.stages;
-      }
-    }
-    
-    if (stages.length === 0) return 0;
-    
-    const completedStages = stages.filter((stage: any) => stage.isCompleted).length;
-    return Math.round((completedStages / stages.length) * 100);
+    // Use the actual progress from database instead of calculating from content
+    return roadmapProgress[roadmap.id] || 0;
   };
 
   const navigationItems = [

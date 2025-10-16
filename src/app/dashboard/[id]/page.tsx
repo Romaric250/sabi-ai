@@ -90,6 +90,26 @@ export default function RoadmapPage() {
           }));
 
           setStages(processedStages);
+
+          // Fetch existing progress from database
+          try {
+            const progressResponse = await fetch(`/api/user-roadmap/progress?roadmapId=${params.id}`);
+            if (progressResponse.ok) {
+              const progressData = await progressResponse.json();
+              const completedStages = progressData.progress?.completedStages || [];
+              
+              // Update stages with actual completion status from database
+              setStages(prevStages => 
+                prevStages.map((stage, index) => ({
+                  ...stage,
+                  isCompleted: completedStages.includes(index),
+                  isUnlocked: index === 0 || completedStages.includes(index - 1),
+                }))
+              );
+            }
+          } catch (progressError) {
+            console.error('Error fetching progress:', progressError);
+          }
         }
       } catch (error) {
         console.error('Error fetching roadmap:', error);
@@ -108,14 +128,77 @@ export default function RoadmapPage() {
     setIsModalOpen(true);
   };
 
-  const handleStageComplete = (stageId: string) => {
-    setStages(prevStages => 
-      prevStages.map(stage => 
-        stage.id === stageId 
-          ? { ...stage, isCompleted: true }
-          : stage
-      )
-    );
+  const handleStageComplete = async (stageId: string) => {
+    try {
+      // Update local state immediately for better UX
+      setStages(prevStages => 
+        prevStages.map((stage, index) => {
+          if (stage.id === stageId) {
+            return { ...stage, isCompleted: true };
+          }
+          // Unlock next stage if previous stage was completed
+          const stageIndex = prevStages.findIndex(s => s.id === stageId);
+          if (index === stageIndex + 1) {
+            return { ...stage, isUnlocked: true };
+          }
+          return stage;
+        })
+      );
+
+      // Update progress in database
+      const response = await fetch('/api/user-roadmap/progress', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roadmapId: params.id,
+          stageId,
+          isCompleted: true,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update progress in database');
+        // Revert local state if database update failed
+        setStages(prevStages => 
+          prevStages.map((stage, index) => {
+            if (stage.id === stageId) {
+              return { ...stage, isCompleted: false };
+            }
+            // Revert next stage unlock
+            const stageIndex = prevStages.findIndex(s => s.id === stageId);
+            if (index === stageIndex + 1) {
+              return { ...stage, isUnlocked: false };
+            }
+            return stage;
+          })
+        );
+      } else {
+        console.log('Progress updated successfully');
+        
+        // Dispatch custom event to notify sidebar of progress update
+        window.dispatchEvent(new CustomEvent('roadmapProgressUpdated', {
+          detail: { roadmapId: params.id }
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      // Revert local state if there was an error
+      setStages(prevStages => 
+        prevStages.map((stage, index) => {
+          if (stage.id === stageId) {
+            return { ...stage, isCompleted: false };
+          }
+          // Revert next stage unlock
+          const stageIndex = prevStages.findIndex(s => s.id === stageId);
+          if (index === stageIndex + 1) {
+            return { ...stage, isUnlocked: false };
+          }
+          return stage;
+        })
+      );
+    }
   };
 
   const getProgressStats = () => {
