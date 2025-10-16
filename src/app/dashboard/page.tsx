@@ -258,7 +258,7 @@ export default function DashboardPage() {
         className="bg-white/90 backdrop-blur-xl border border-gray-200/60 rounded-3xl p-8 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-black">Romaric's Sabi AI's Workspace</h2>
+          <h2 className="text-2xl font-bold text-black">Romaric&apos;s Sabi AI&apos;s Workspace</h2>
         </div>
         
         {/* Search and Filters */}
