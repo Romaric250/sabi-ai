@@ -98,6 +98,13 @@ export default function RoadmapPage() {
               const progressData = await progressResponse.json();
               const completedStages = progressData.progress?.completedStages || [];
               
+              console.log('Dashboard progress loading debug:', {
+                roadmapId: params.id,
+                completedStages,
+                totalStages: processedStages.length,
+                progressPercentage: progressData.progress?.percentage
+              });
+              
               // Update stages with actual completion status from database
               setStages(prevStages => 
                 prevStages.map((stage, index) => ({
@@ -129,6 +136,8 @@ export default function RoadmapPage() {
   };
 
   const handleStageComplete = async (stageId: string) => {
+    console.log('handleStageComplete called with stageId:', stageId);
+    
     try {
       // Update local state immediately for better UX
       setStages(prevStages => 
@@ -146,16 +155,20 @@ export default function RoadmapPage() {
       );
 
       // Update progress in database
+      const requestBody = {
+        roadmapId: params.id,
+        stageId,
+        isCompleted: true,
+      };
+      
+      console.log('Sending progress update request:', requestBody);
+      
       const response = await fetch('/api/user-roadmap/progress', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          roadmapId: params.id,
-          stageId,
-          isCompleted: true,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

@@ -62,6 +62,9 @@ export async function PUT(request: NextRequest) {
       const stageIndex = parseInt(stageId.replace('stage-', ''));
       completedStages = completedStages.filter(id => id !== stageIndex);
     }
+    
+    // Sort completed stages to ensure proper order
+    completedStages = completedStages.sort((a, b) => a - b);
 
     // Get roadmap to calculate total stages
     const roadmap = await prisma.roadmap.findUnique({
@@ -80,10 +83,27 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Calculate progress percentage
-    const progressPercentage = totalStages > 0 
-      ? Math.round((completedStages.length / totalStages) * 100) 
-      : 0;
+    // Calculate progress percentage with better precision
+    let progressPercentage = 0;
+    if (totalStages > 0) {
+      const exactPercentage = (completedStages.length / totalStages) * 100;
+      progressPercentage = Math.round(exactPercentage);
+      
+      // Ensure we don't exceed 100%
+      if (progressPercentage > 100) {
+        progressPercentage = 100;
+      }
+    }
+    
+    console.log('Progress calculation debug:', {
+      roadmapId,
+      stageId,
+      completedStages,
+      totalStages,
+      progressPercentage,
+      completedCount: completedStages.length,
+      isCompleted
+    });
 
     // Update user roadmap
     const updatedUserRoadmap = await prisma.userRoadmap.update({
