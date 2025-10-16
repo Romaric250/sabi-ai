@@ -7,10 +7,13 @@ import { motion } from "framer-motion";
 
 interface Roadmap {
   id: string;
-  prompt: string;
+  prompt?: string;
+  title?: string;
+  description?: string;
+  difficulty?: string;
+  stages?: any[] | number;
   createdAt: string;
   updatedAt: string;
-  stages: any[];
 }
 
 export default function DashboardPage() {
@@ -28,24 +31,36 @@ export default function DashboardPage() {
 
   const fetchRoadmaps = async () => {
     try {
+      console.log('Fetching roadmaps...');
+      
       // Fetch user's roadmaps
       const userResponse = await fetch('/api/user-roadmap');
+      console.log('User roadmaps response:', userResponse.status);
       if (userResponse.ok) {
-        const userData = await userResponse.json();
-        const roadmaps = userData.roadmaps || [];
+        const roadmaps = await userResponse.json();
+        console.log('User roadmaps data:', roadmaps);
         // Get 3 random roadmaps
         const shuffled = roadmaps.sort(() => 0.5 - Math.random());
         setUserRoadmaps(shuffled.slice(0, 3));
+        console.log('Set user roadmaps:', shuffled.slice(0, 3));
+      } else {
+        console.error('Failed to fetch user roadmaps:', userResponse.status);
+        setUserRoadmaps([]);
       }
 
       // Fetch community roadmaps (excluding current user's)
       const communityResponse = await fetch('/api/sample-roadmaps');
+      console.log('Community roadmaps response:', communityResponse.status);
       if (communityResponse.ok) {
-        const communityData = await communityResponse.json();
-        const roadmaps = communityData.roadmaps || [];
+        const roadmaps = await communityResponse.json();
+        console.log('Community roadmaps data:', roadmaps);
         // Get 4 random roadmaps
         const shuffled = roadmaps.sort(() => 0.5 - Math.random());
         setCommunityRoadmaps(shuffled.slice(0, 4));
+        console.log('Set community roadmaps:', shuffled.slice(0, 4));
+      } else {
+        console.error('Failed to fetch community roadmaps:', communityResponse.status);
+        setCommunityRoadmaps([]);
       }
     } catch (error) {
       console.error('Error fetching roadmaps:', error);
@@ -56,9 +71,10 @@ export default function DashboardPage() {
 
   const getStats = () => {
     const totalRoadmaps = userRoadmaps.length;
-    const completedRoadmaps = userRoadmaps.filter(roadmap => 
-      roadmap.stages && roadmap.stages.every((stage: any) => stage.isCompleted)
-    ).length;
+    const completedRoadmaps = userRoadmaps.filter(roadmap => {
+      if (!roadmap.stages || typeof roadmap.stages === 'number') return false;
+      return roadmap.stages.every((stage: any) => stage.isCompleted);
+    }).length;
     
     return [
       {
@@ -101,11 +117,11 @@ export default function DashboardPage() {
   };
 
   const filteredUserRoadmaps = userRoadmaps.filter(roadmap =>
-    roadmap.prompt.toLowerCase().includes(searchQuery.toLowerCase())
+    (roadmap.prompt || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredCommunityRoadmaps = communityRoadmaps.filter(roadmap =>
-    roadmap.prompt.toLowerCase().includes(searchQuery.toLowerCase())
+    (roadmap.prompt || roadmap.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const stats = getStats();
@@ -158,7 +174,7 @@ export default function DashboardPage() {
   ];
 
   const getProgressPercentage = (roadmap: Roadmap) => {
-    if (!roadmap.stages || roadmap.stages.length === 0) return 0;
+    if (!roadmap.stages || typeof roadmap.stages === 'number') return 0;
     const completedStages = roadmap.stages.filter((stage: any) => stage.isCompleted).length;
     return Math.round((completedStages / roadmap.stages.length) * 100);
   };
@@ -492,7 +508,7 @@ export default function DashboardPage() {
                         <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-semibold">R</span>
                         </div>
-                        <span className="text-sm text-gray-600">{roadmap.prompt.toLowerCase().replace(/\s+/g, '-')}</span>
+                        <span className="text-sm text-gray-600">{(roadmap.prompt || '').toLowerCase().replace(/\s+/g, '-')}</span>
                       </div>
                       <span className="text-xs text-gray-500">Edited {formatDate(roadmap.createdAt)}</span>
                     </div>
@@ -507,17 +523,8 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-lg font-semibold text-black mb-2">No roadmaps found</h3>
               <p className="text-gray-600 mb-4">
-                {searchQuery ? 'Try adjusting your search terms' : 'Create your first learning roadmap to get started'}
+                {searchQuery ? 'Try adjusting your search terms' : 'No roadmaps available'}
               </p>
-              {!searchQuery && (
-                <Button 
-                  onClick={() => window.location.href = '/dashboard'}
-                  className="bg-black hover:bg-gray-800 text-white"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Roadmap
-                </Button>
-              )}
             </div>
           )}
         </div>
@@ -575,7 +582,7 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 bg-black/10" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <h3 className="text-lg font-semibold mb-2">{roadmap.prompt}</h3>
+                    <h3 className="text-lg font-semibold mb-2">{roadmap.prompt || roadmap.title}</h3>
                     <p className="text-sm opacity-90">Community</p>
                   </div>
                 </div>
@@ -584,12 +591,12 @@ export default function DashboardPage() {
               {/* Content */}
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-600">Learning Path</span>
-                  <span className="text-xs text-gray-500">{roadmap.stages?.length || 0} Stages</span>
+                  <span className="text-xs font-medium text-gray-600">{roadmap.difficulty || 'Learning Path'}</span>
+                  <span className="text-xs text-gray-500">{typeof roadmap.stages === 'number' ? roadmap.stages : roadmap.stages?.length || 0} Stages</span>
                 </div>
                 
-                <h3 className="font-semibold text-black mb-2">{roadmap.prompt}</h3>
-                <p className="text-xs text-gray-600 mb-3">Community Roadmap</p>
+                <h3 className="font-semibold text-black mb-2">{roadmap.prompt || roadmap.title}</h3>
+                <p className="text-xs text-gray-600 mb-3">{roadmap.description || 'Community Roadmap'}</p>
                 
                 <Button variant="outline" size="sm" className="w-full border-gray-200/60 text-black hover:bg-black/5">
                   View Roadmap <ArrowRight className="w-3 h-3 ml-2" />
